@@ -25,6 +25,7 @@ load_dotenv()
 # ── API Keys ──────────────────────────────────────────────────────────────────
 GEMINI_API_KEY    = os.environ.get("GEMINI_API_KEY")
 GEMINI_API_KEY_2  = os.environ.get("GEMINI_API_KEY_2")
+GROQ_API_KEY      = os.environ.get("GROQ_API_KEY")
 EURON_API_KEY     = os.environ.get("EURON_API_KEY")
 EXA_API_KEY       = os.environ.get("EXA_API_KEY")
 BUFFER_API_KEY    = os.environ.get("BUFFER_API_KEY")
@@ -124,7 +125,7 @@ ONLY the post text. No quotes. No explanation. No preamble.
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# GEMINI RETRY + FALLBACK CHAIN  (key1 → key2 → Euron)
+# GEMINI RETRY + FALLBACK CHAIN  (key1 → key2 → Groq → Euron)
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _parse_retry_seconds(error: Exception) -> int:
@@ -145,6 +146,30 @@ def _is_retryable_server_error(error: Exception) -> bool:
 def _is_daily_quota_exhausted(error: Exception) -> bool:
     s = str(error)
     return "PerDay" in s or "GenerateRequestsPerDay" in s or ("limit: 0" in s and "429" in s)
+
+
+def _call_groq(prompt: str, system_instruction: str) -> str:
+    if not GROQ_API_KEY:
+        raise RuntimeError("GROQ_API_KEY not set.")
+    messages = [
+        {"role": "system", "content": system_instruction},
+        {"role": "user", "content": prompt},
+    ]
+    for attempt in range(1, 4):
+        resp = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"},
+            json={"model": "llama-3.3-70b-versatile", "messages": messages},
+            timeout=90,
+        )
+        if resp.status_code == 429:
+            wait = 20 * attempt
+            print(f"  [Groq] 429 rate limit, attempt {attempt}/3. Waiting {wait}s...")
+            time.sleep(wait)
+            continue
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"].strip()
+    raise RuntimeError("Groq API failed after 3 attempts.")
 
 
 def _call_euron(prompt: str, system_instruction: str) -> str:
@@ -213,13 +238,21 @@ def generate_text(prompt: str, system_instruction: str) -> str:
                     else:
                         raise
 
-    # All Gemini keys exhausted → try Euron
+    # All Gemini keys exhausted → try Groq, then Euron
+    if GROQ_API_KEY:
+        try:
+            print("  [Groq] All Gemini keys exhausted. Falling back to Groq...")
+            return _call_groq(prompt, system_instruction)
+        except Exception as e:
+            print(f"  [Groq] Failed: {e}. Trying Euron...")
+            last_error = e
+
     if EURON_API_KEY:
-        print("  [Euron] All Gemini keys exhausted. Falling back to Euron...")
+        print("  [Euron] Falling back to Euron...")
         return _call_euron(prompt, system_instruction)
 
     raise last_error or RuntimeError(
-        "All Gemini keys exhausted and no Euron key configured. Try again tomorrow."
+        "All Gemini keys exhausted and no Groq/Euron key configured. Try again tomorrow."
     )
 
 
