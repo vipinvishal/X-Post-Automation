@@ -45,6 +45,7 @@ NICHE   = _config["niche"]
 PERSONA = _config["persona"]
 TOPICS  = _config["topics"]
 TONES   = _config["tones"]
+FORMATS = _config["formats"]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -52,75 +53,58 @@ TONES   = _config["tones"]
 # ══════════════════════════════════════════════════════════════════════════════
 
 SYSTEM_PROMPT = """
-You are a ghost-writer for a technical AI founder on X (Twitter).
-You write like someone who has actually shipped AI products — raw, specific, opinionated.
-You know that specificity beats inspiration, one sharp sentence beats a paragraph, and
-the audience (AI founders, ML engineers, CTOs) can spot generic AI hype instantly.
+You are a ghost-writer for a technical AI founder building an audience on X from scratch.
+Your one job: make a smart technical person stop scrolling and think "I have never seen anyone say it exactly like that."
+You write like someone who has shipped AI in production and lost money, sleep, and users because of it.
+Raw. Specific. Opinionated. Never hedging. The audience detects generic AI content instantly.
 """.strip()
 
 VIRAL_POST_PROMPT = """
-You are writing for an X account in the AI/tech space.
-The audience is: AI founders, ML engineers, technical builders, AI enthusiasts, CTOs.
-The goal: maximum views, comments, likes — leading to audience monetization.
+Write a single X (Twitter) post for an AI/tech founder account.
 
-━━━ INPUT ━━━
+━━━ CONTEXT ━━━
 Niche   : {niche}
 Persona : {persona}
 Topic   : {topic}
 Tone    : {tone}
+Format  : {format_style}
 
-Voice rule: Every post must sound like it came from someone who was personally in the room
-when this happened — not someone who read about it. Use "I", "we", "my team", "I shipped",
-"I broke", "I learned". First-person always. No exceptions.
-
-Research from the web (ground your post in this real data):
+Research (use this for specific grounding — do NOT cite sources or name them):
 {research}
 
-━━━ VIRAL FRAMEWORKS — pick the best one for this topic ━━━
+━━━ FORMAT INSTRUCTIONS ━━━
+Follow the Format above exactly. It defines the entire structure of this post.
+Do not mix formats. Do not add sections the format does not ask for.
 
-Framework A — The Contrarian AI Take:
-  [Claim that goes against popular AI opinion]
-  [Specific technical reason why]
-  [What most people miss]
-  [Question that makes AI builders want to reply]
-
-Framework B — The Builder War Story:
-  [What I tried / built / shipped]
-  [What actually happened — specific numbers or outcome]
-  [The uncomfortable lesson]
-  [Question inviting others to share their experience]
-
-Framework C — The Hype vs Reality:
-  [The thing everyone believes about AI]
-  [What actually happens in production]
-  [The specific gap nobody talks about]
-  [Sharp closing question or statement]
-
-Framework D — The Prediction / Hot Take:
-  [Bold claim about where AI is going]
-  [3 specific signals that support it]
-  [Who this affects and how]
-  [Question that sparks debate]
+━━━ HOOK RULES ━━━
+Line 1 must stop the scroll in under 2 seconds.
+Strong openers:
+  "Everyone is optimizing the wrong thing."
+  "We burned 3 months before we found the real problem."
+  "The model was fine. The data was the disaster."
+  "Nobody talks about what happens after the demo."
+Weak openers (never write these):
+  "I shipped a tool and learned..."
+  "Here is what I discovered when testing..."
+  "As someone who has been building with AI..."
 
 ━━━ RULES ━━━
 ✓ Max 280 characters TOTAL
-✓ Line 1 MUST hook — contrarian, surprising, or provocative
-✓ Every line break must earn its place — no filler lines
-✓ Use specific technical terms (LLM, RAG, fine-tuning, inference, etc.) — the audience is technical
-✓ End with a question that a senior ML engineer or AI founder would genuinely want to answer
-✓ Sound like a builder who has actually shipped — not a tech journalist
+✓ First person — I, my team, we built, I shipped, I broke
+✓ Every claim must be specific — a number, a timeframe, a concrete outcome
+✓ Technical terms where they earn their place — LLM, RAG, fine-tuning, inference, hallucination
+✓ Sound like someone who was in the room, not someone who read about it
+✗ NO question at the end unless the Format explicitly calls for it
 ✗ NO hashtags
-✗ NO generic emojis like 🚀🔥💡
-✗ NO hype language ("game-changing", "revolutionary", "the future is here")
-✗ NO vague statements — every claim must be specific
-✗ NEVER cite external sources, tools, or companies as proof (no "See Devin", no "According to OpenAI") — all credibility must come from first-person experience or direct observation
-✗ NEVER write from a journalist or analyst perspective — always write as someone who personally built, shipped, broke, or fixed the thing
-✗ NEVER use corporate language ("this quarter", "leverage", "utilize", "use case", "ROI" as a standalone buzzword)
-✗ NEVER present 3 competing ideas in one post — pick ONE insight and go deep on it
-✗ NO bold/italic markdown — plain text only
+✗ NO emojis
+✗ NO hype words — game-changing, revolutionary, disrupting, the future
+✗ NO vague filler — as we know, at the end of the day, to be honest, it depends
+✗ NO external citations — all credibility from your own experience only
+✗ NO markdown — plain text only
+✗ NO "I shipped X and learned Y" openers — they are overused and ignored
 
 ━━━ OUTPUT ━━━
-ONLY the post text. No quotes. No explanation. No preamble.
+ONLY the post text. No quotes. No labels. No explanation.
 """.strip()
 
 
@@ -300,7 +284,7 @@ def research_topic(topic: str, niche: str) -> str:
 # STEP 2 — Generate Viral Post with Gemini
 # ══════════════════════════════════════════════════════════════════════════════
 
-def generate_post(topic: str, tone: str, niche: str, persona: str, research: str) -> str:
+def generate_post(topic: str, tone: str, format_style: str, niche: str, persona: str, research: str) -> str:
     """Call Gemini with the viral post prompt + research brief."""
     print("[ Step 2 ] Generating post with Gemini...")
 
@@ -309,6 +293,7 @@ def generate_post(topic: str, tone: str, niche: str, persona: str, research: str
         persona=persona,
         topic=topic,
         tone=tone,
+        format_style=format_style,
         research=research[:2000],
     )
 
@@ -474,22 +459,24 @@ def schedule_to_buffer(post_text: str) -> str:
 # ══════════════════════════════════════════════════════════════════════════════
 
 def main(preview: bool = False):
-    topic = random.choice(TOPICS)
-    tone  = random.choice(TONES)
+    topic         = random.choice(TOPICS)
+    tone          = random.choice(TONES)
+    format_style  = random.choice(FORMATS)
 
     print(f"\n{'='*60}")
     print(f"  X Post Agent — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
     if preview:
         print(f"  MODE: PREVIEW (no Buffer scheduling)")
     print(f"{'='*60}")
-    print(f"  Niche : {NICHE}")
-    print(f"  Topic : {topic}")
-    print(f"  Tone  : {tone}")
+    print(f"  Niche  : {NICHE}")
+    print(f"  Topic  : {topic}")
+    print(f"  Tone   : {tone}")
+    print(f"  Format : {format_style[:60]}...")
     print(f"{'='*60}\n")
 
     try:
         research = research_topic(topic, NICHE)
-        post     = generate_post(topic, tone, NICHE, PERSONA, research)
+        post     = generate_post(topic, tone, format_style, NICHE, PERSONA, research)
 
         if preview:
             print(f"{'='*60}")
