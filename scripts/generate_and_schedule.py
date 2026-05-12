@@ -69,8 +69,16 @@ Topic   : {topic}
 Tone    : {tone}
 Format  : {format_style}
 
-Research (use this for specific grounding — do NOT cite sources or name them):
+Latest research and news (this is real, fresh content — ground your post in it):
 {research}
+
+━━━ HOW TO USE THE RESEARCH ━━━
+If the research contains a recent announcement, model release, paper, or development:
+  → Make THAT the subject of the post. Your take ON the news, not just a personal story.
+  → Specific facts from the research (numbers, names of models, findings) make the post feel current and real.
+If the research is more general background:
+  → Use it to add a specific detail or number that makes your personal insight feel grounded.
+Either way: do NOT name or cite the source. The insight must sound like it comes from you.
 
 ━━━ FORMAT INSTRUCTIONS ━━━
 Follow the Format above exactly. It defines the entire structure of this post.
@@ -250,10 +258,10 @@ def research_topic(topic: str, niche: str) -> str:
 
     exa = Exa(api_key=EXA_API_KEY)
     results = exa.search(
-        query=f"{topic} {niche} insights trends 2025",
+        query=f"{topic} {niche} 2026 news research announcement release",
         type="auto",
         num_results=5,
-        start_published_date="2025-01-01",
+        start_published_date="2026-01-01",
         contents={
             "text": {"max_characters": 800},
             "highlights": {"num_sentences": 3},

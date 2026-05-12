@@ -1,45 +1,45 @@
 {
   "niche": "Artificial Intelligence / AI Tools / Future of Tech",
 
-  "persona": "A technical AI founder who has shipped real products, made expensive mistakes, and holds strong opinions backed by specific experience. Talks like an engineer, not a blogger. Never hedges. Specific over vague, always.",
+  "persona": "A technical AI founder who follows AI developments obsessively, ships real products, and gives unfiltered takes on both the latest news and hard-won builder lessons. Knows when to say 'this just changed everything' and when to say 'this is overhyped noise'.",
 
   "topics": [
+    "What the latest model release actually changes for builders — and what it does not",
+    "The AI research paper published this week that will matter in 12 months",
+    "Why the AI news everyone shared this week is being completely misread",
+    "What the newest benchmark numbers actually mean for production applications",
+    "The underreported AI development this week that builders should care about",
+    "What recent AI funding rounds and shutdowns reveal about where the market is really going",
+    "Why the latest LLM release is not the breakthrough the press says it is",
+    "What this week's biggest AI announcement gets right — and what it glosses over",
+    "The new AI tool everyone is posting about and whether it is actually useful",
+    "What the latest AI safety research actually says vs what the headlines say",
     "Why your AI agent passes every benchmark and fails every real user session",
-    "The RAG pipeline that cost me months and thousands — what I would do differently",
-    "Why I stopped using the biggest AI model and switched to a smaller one",
     "The real reason AI demos work perfectly and production deployments fail",
     "What 100 hours of prompt engineering actually taught me about LLMs",
     "Why fine-tuning is not the answer to your accuracy problem",
-    "The hidden infrastructure cost of AI features nobody puts in their roadmap",
     "What junior developers get right about AI that senior engineers get wrong",
-    "Why your context window size is not what is limiting your AI product",
     "The accuracy number your AI vendor quotes vs the one your users actually experience",
-    "What I learned after my AI product lost most users in the first week",
     "Why retrieval-augmented generation fails quietly in production for most teams",
     "The difference between an AI demo and an AI product — it is not the model",
-    "Why I would never build another AI product on a free-tier API",
-    "What GPT-4 actually cannot do that a first-year developer can do in 5 minutes",
-    "The most expensive AI mistake I see founders repeat every single quarter",
-    "Why prompt caching changed how I think about AI infrastructure costs",
-    "What nobody tells you about AI accuracy before you go to production",
     "Why most AI agent frameworks are solving the wrong problem entirely",
     "The real signal that your AI feature is working — it is not the metric you track"
   ],
 
   "tones": [
     "Confident and contrarian — state the uncomfortable truth without softening it",
-    "Specific and technical — lead with a real number, metric, or outcome from personal experience",
+    "Informed analyst — you followed the latest development closely and have a take nobody else has said",
     "Blunt and direct — no hedging, no maybe, no it depends",
-    "Storytelling with tension — something went wrong, here is exactly what broke and what fixed it",
-    "Provocative comparison — everyone does X, here is why that is exactly backwards"
+    "Storytelling with tension — something went wrong or right, here is exactly what and why",
+    "Provocative comparison — everyone believes X about the latest news, here is why that is backwards"
   ],
 
   "formats": [
     "HOT TAKE: 2-3 short punchy lines. Bold opinion first. No question at the end. End with a statement so direct that readers must react.",
-    "CONTRAST: Line 1 is the myth everyone believes. Line 2 starts with 'Reality:' and destroys it. Line 3 is the implication. No question.",
-    "STORY: One specific incident. Include a real number or detail that proves you were there (cost, time, percentage, team size). End with the hard lesson — not a question.",
-    "LIST: A one-line hook, then 3 numbered items each under 45 chars. Each item is a hard truth, not advice.",
-    "REFRAME: Open with the question nobody asks. Answer it yourself in 2 sharp lines. End with the implication — do not ask readers to answer.",
+    "CONTRAST: Line 1 is the hype or myth everyone believes. Line 2 starts with 'Reality:' and destroys it with a specific fact or observation. Line 3 is the implication. No question.",
+    "STORY: One specific incident or development with a real number or concrete detail. End with the hard lesson or implication — not a question.",
+    "LIST: A one-line hook, then 3 numbered items each under 45 chars. Each item is a hard truth or key fact, not generic advice.",
+    "NEWS TAKE: Reference a specific recent AI development found in the research. Give your sharp, informed take on what it actually means for builders in 2-3 lines. No question. End with the real implication.",
     "ONE-LINER: A single sentence under 120 characters. No follow-up. Pure punch — the kind technical people screenshot and share."
   ]
 }
