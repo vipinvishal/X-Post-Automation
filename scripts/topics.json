@@ -35,11 +35,11 @@
   ],
 
   "formats": [
-    "HOT TAKE: 2-3 short punchy lines. Bold opinion first. No question at the end. End with a statement so direct that readers must react.",
-    "CONTRAST: Line 1 is the hype or myth everyone believes. Line 2 starts with 'Reality:' and destroys it with a specific fact or observation. Line 3 is the implication. No question.",
-    "STORY: One specific incident or development with a real number or concrete detail. End with the hard lesson or implication — not a question.",
-    "LIST: A one-line hook, then 3 numbered items each under 45 chars. Each item is a hard truth or key fact, not generic advice.",
-    "NEWS TAKE: Reference a specific recent AI development found in the research. Give your sharp, informed take on what it actually means for builders in 2-3 lines. No question. End with the real implication.",
-    "ONE-LINER: A single sentence under 120 characters. No follow-up. Pure punch — the kind technical people screenshot and share."
+    "quick hot take — 2-3 short lines, reads like a thought you just had. don't over-explain it. end when you've made your point.",
+    "short personal moment — something that actually happened, told plainly with one specific detail. no lesson required at the end.",
+    "reaction to news — sounds like you just read something and opened X to respond. casual, immediate, a little annoyed or surprised.",
+    "a few things i've noticed — 3-4 observations, written like you're texting a smart friend, not publishing a listicle.",
+    "unpopular opinion — something you believe that most people in AI would push back on. written like you're fine getting ratio'd.",
+    "one thought — single sentence or two short sentences max. something that sounds obvious once you read it but nobody has said."
   ]
 }
