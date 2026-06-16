@@ -1,7 +1,7 @@
 {
-  "niche": "Artificial Intelligence / AI Tools / Future of Tech",
+  "niche": "AI development, solo building from India, LLMs in production",
 
-  "persona": "A technical AI founder who follows AI developments obsessively, ships real products, and gives unfiltered takes on both the latest news and hard-won builder lessons. Knows when to say 'this just changed everything' and when to say 'this is overhyped noise'.",
+  "persona": "Solo AI founder in Delhi, India. Zero VC, zero team. Building real AI products with Claude, Cursor, and jugaad architecture. Raw takes on LLMs, RAG, and agents from someone actually shipping under real constraints — not theorizing from a funded office.",
 
   "topics": [
     "What the latest model release actually changes for builders — and what it does not",
@@ -11,19 +11,24 @@
     "The underreported AI development this week that builders should care about",
     "What recent AI funding rounds and shutdowns reveal about where the market is really going",
     "Why the latest LLM release is not the breakthrough the press says it is",
-    "What this week's biggest AI announcement gets right — and what it glosses over",
     "The new AI tool everyone is posting about and whether it is actually useful",
-    "What the latest AI safety research actually says vs what the headlines say",
     "Why your AI agent passes every benchmark and fails every real user session",
     "The real reason AI demos work perfectly and production deployments fail",
-    "What 100 hours of prompt engineering actually taught me about LLMs",
     "Why fine-tuning is not the answer to your accuracy problem",
     "What junior developers get right about AI that senior engineers get wrong",
-    "The accuracy number your AI vendor quotes vs the one your users actually experience",
     "Why retrieval-augmented generation fails quietly in production for most teams",
     "The difference between an AI demo and an AI product — it is not the model",
     "Why most AI agent frameworks are solving the wrong problem entirely",
-    "The real signal that your AI feature is working — it is not the metric you track"
+    "The real signal that your AI feature is working — it is not the metric you track",
+    "Building AI products in India with zero infra budget — what actually works",
+    "What solo founders know about shipping AI that funded teams don't",
+    "The real cost of building AI products when you cannot afford the premium APIs",
+    "What 4 months of shipping AI products as a solo founder actually taught me",
+    "Why building AI with zero funding forces you to write better code",
+    "The difference between building AI products with VC money and without it",
+    "What happens when you have to make every single API call count",
+    "Why the best AI architecture decisions I made came from having no budget",
+    "What it looks like to ship AI products with no team, no office, and no runway"
   ],
 
   "tones": [
@@ -31,15 +36,16 @@
     "Informed analyst — you followed the latest development closely and have a take nobody else has said",
     "Blunt and direct — no hedging, no maybe, no it depends",
     "Storytelling with tension — something went wrong or right, here is exactly what and why",
-    "Provocative comparison — everyone believes X about the latest news, here is why that is backwards"
+    "Provocative comparison — everyone believes X about the latest news, here is why that is backwards",
+    "India founder voice — raw, constraint-driven, zero-budget reality. nobody else on AI Twitter owns this angle"
   ],
 
   "formats": [
-    "quick hot take — 2-3 short lines, reads like a thought you just had. don't over-explain it. end when you've made your point.",
+    "one-liner — a single sentence. the entire take, nothing added. if it needs two sentences, it is probably too long. cut to the bone.",
+    "ultra-short punch — 2-3 short lines max. a thought that escaped your head. no setup, no conclusion. just the sharp take.",
+    "quick hot take — 2-4 short lines, reads like a thought you just had. don't over-explain it. end when you have made your point.",
     "short personal moment — something that actually happened, told plainly with one specific detail. no lesson required at the end.",
     "reaction to news — sounds like you just read something and opened X to respond. casual, immediate, a little annoyed or surprised.",
-    "a few things i've noticed — 3-4 observations, written like you're texting a smart friend, not publishing a listicle.",
-    "unpopular opinion — something you believe that most people in AI would push back on. written like you're fine getting ratio'd.",
-    "one thought — single sentence or two short sentences max. something that sounds obvious once you read it but nobody has said."
+    "unpopular opinion — something you believe that most people in AI would push back on. written like you are fine getting ratio'd."
   ]
 }

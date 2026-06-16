@@ -53,14 +53,15 @@ FORMATS = _config["formats"]
 # ══════════════════════════════════════════════════════════════════════════════
 
 SYSTEM_PROMPT = """
-You write X posts for a technical AI founder. Sound like a real person, not a newsletter.
-Use contractions. Let sentences be short and imperfect if that's how the thought flows.
+You write X posts for a solo AI founder in Delhi, India — zero VC, zero team, shipping real AI products under real constraints.
+Sound like a real person, not a newsletter. Use contractions. Let sentences be short and imperfect.
 The goal is NOT to sound polished — it's to sound real.
-People on X sound like they're thinking out loud to a smart friend, not presenting at a conference.
+The India angle is an unfair advantage: nobody else on AI Twitter owns "solo Indian founder building in public." Use it when it fits naturally, not in every post.
 """.strip()
 
 VIRAL_POST_PROMPT = """
-Write one X post for an AI/tech founder. It must sound like a real human typed it, not an AI.
+Write one X post for a solo AI founder in Delhi, India — zero VC, zero team, shipping real products under real constraints.
+It must sound like a real human typed it, not an AI.
 
 Topic: {topic}
 Tone: {tone}
@@ -83,6 +84,8 @@ Human-written (write like this):
   "nobody talks about what the AI looks like on day 30 when the training data gets stale."
   "the new [model] is impressive. but it still can't do the thing my junior dev does in 10 mins."
   "genuinely can't believe we're still debating fine-tuning vs RAG in 2026. the answer is neither."
+  "building AI with ₹0 infra budget teaches you what actually matters. every API call counts."
+  "4 months in. no VC. no team. just me, claude, and a lot of failed deploys."
 
 Rules for sounding human:
   - Use contractions: can't, don't, it's, that's, we've, I'd, won't
@@ -91,6 +94,13 @@ Rules for sounding human:
   - "ngl", "genuinely", "honestly", "wild that", "okay but" — use when they fit
   - Imperfect is better than polished
   - If it reads like a LinkedIn post or a blog intro, rewrite it
+
+━━━ INDIA ANGLE ━━━
+When the topic connects to cost, constraints, or builder reality — lean into the Indian founder experience:
+  - zero VC, no team, jugaad architecture
+  - making every API call count because you can't afford waste
+  - building in public with no runway
+Don't force it. Skip it if the topic is purely news-reactive.
 
 ━━━ USING THE RESEARCH ━━━
 If there's a recent model release, paper, or announcement in the research — react to it like a person who just read it.
@@ -107,6 +117,42 @@ Never cite the source. It should sound like you already knew this.
 - Plain text only, no markdown
 
 OUTPUT: only the post. no quotes, no labels, nothing else.
+""".strip()
+
+
+THREAD_POST_PROMPT = """
+Write a 6-tweet thread for an X account run by a solo AI founder in Delhi, India — zero VC, zero team, shipping real AI products.
+
+Topic: {topic}
+Tone: {tone}
+
+Recent AI news and research to draw from (don't cite sources):
+{research}
+
+━━━ THREAD STRUCTURE ━━━
+Tweet 1 (HOOK): Bold, specific opener. Personal story OR contrarian claim. Max 150 chars. End with "→" or a colon to signal more is coming.
+Tweet 2-5 (BODY): Each is 1-2 punchy lines. Numbered like "2/" at the start. Each tweet must stand alone — no "as I said above."
+Tweet 6 (CTA): Invite follow. Sound genuine, not salesy. Example: "if this resonates — I'm a solo founder in Delhi building AI in public. posting what I actually learn."
+
+━━━ VOICE ━━━
+Human-written (write like this):
+  "spent 3 months on this. the bug was in our data, not the model. of course it was."
+  "building AI with ₹0 infra budget teaches you what actually matters."
+  "4 months in. no team. just me, claude, and way too many 503s."
+
+AI-written (never write like this):
+  "I've witnessed a fundamental misalignment..."
+  "The implications for production deployments are significant..."
+
+━━━ INDIA ANGLE ━━━
+Use it in tweet 1 or 6 when it fits naturally. The account's edge: solo founder in Delhi, zero budget, shipping in public. Nobody else on AI Twitter owns this.
+
+━━━ RULES ━━━
+- Tweet 1 max 150 chars, tweets 2-6 max 280 chars each
+- No hashtags, no emojis, plain text only
+- Fragments ok. Lowercase ok.
+
+OUTPUT FORMAT: exactly 6 tweets separated by a line containing only "---". Nothing else — no labels, no preamble.
 """.strip()
 
 
@@ -344,6 +390,46 @@ def generate_post(topic: str, tone: str, format_style: str, niche: str, persona:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# STEP 2b — Generate Thread with Gemini
+# ══════════════════════════════════════════════════════════════════════════════
+
+def generate_thread(topic: str, tone: str, research: str) -> list:
+    """Generate a 6-tweet thread. Returns [] on failure (caller falls back to single post)."""
+    print("[ Step 2 ] Generating thread with Gemini...")
+
+    prompt = THREAD_POST_PROMPT.format(
+        topic=topic,
+        tone=tone,
+        research=research[:2000],
+    )
+
+    raw = generate_text(prompt, SYSTEM_PROMPT)
+
+    import re as _re
+    tweets = [t.strip() for t in raw.split("---") if t.strip()]
+    tweets = [_re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', t) for t in tweets]
+    tweets = [_re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', t).strip() for t in tweets]
+
+    if len(tweets) < 3:
+        print(f"  [Thread] Got {len(tweets)} tweets, expected 6. Falling back to single post.")
+        return []
+
+    tweets = tweets[:6]
+    for i, tweet in enumerate(tweets):
+        if len(tweet) > 280:
+            tweets[i] = tweet[:277] + "..."
+
+    print(f"\n  Generated {len(tweets)}-tweet thread:")
+    print(f"  {'─'*50}")
+    for i, tweet in enumerate(tweets, 1):
+        preview = tweet[:100] + ("..." if len(tweet) > 100 else "")
+        print(f"  [{i}] {preview}")
+    print(f"  {'─'*50}\n")
+
+    return tweets
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # STEP 3 — Schedule to Buffer
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -456,41 +542,122 @@ def schedule_to_buffer(post_text: str) -> str:
     raise RuntimeError("Buffer API error: exhausted retry attempts.")
 
 
+def schedule_thread_to_buffer(tweets: list) -> str:
+    """Push a thread to Buffer via GraphQL items input. Falls back to hook-only on API error."""
+    print("[ Step 3 ] Scheduling thread to Buffer...")
+
+    due_at = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
+    items = [{"text": t} for t in tweets]
+
+    mutation = """
+    mutation CreatePost($items: [PostItemInput!]!, $channelId: ChannelId!, $dueAt: DateTime) {
+      createPost(input: {
+        items: $items,
+        channelId: $channelId,
+        schedulingType: automatic,
+        mode: customScheduled,
+        dueAt: $dueAt
+      }) {
+        ... on PostActionSuccess {
+          post { id text }
+        }
+        ... on MutationError {
+          message
+        }
+      }
+    }
+    """
+
+    response = requests.post(
+        "https://api.buffer.com",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {BUFFER_API_KEY}",
+        },
+        json={
+            "query": mutation,
+            "variables": {"items": items, "channelId": BUFFER_CHANNEL_ID, "dueAt": due_at},
+        },
+        timeout=15,
+    )
+
+    try:
+        data = response.json()
+    except ValueError:
+        print("  [Thread] Buffer returned invalid JSON — falling back to hook tweet only...")
+        return schedule_to_buffer(tweets[0])
+
+    if response.status_code != 200 or "errors" in data:
+        print("  [Thread] Buffer thread API error — falling back to hook tweet only...")
+        return schedule_to_buffer(tweets[0])
+
+    result = data.get("data", {}).get("createPost", {})
+    if "message" in result:
+        print(f"  [Thread] Buffer mutation error: {result['message']} — falling back to hook tweet only...")
+        return schedule_to_buffer(tweets[0])
+
+    post_id = result.get("post", {}).get("id", "unknown")
+    print(f"  Scheduled thread! Buffer Post ID: {post_id}")
+    print(f"  Publish time: {due_at}\n")
+    return post_id
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ══════════════════════════════════════════════════════════════════════════════
 
 def main(preview: bool = False):
-    topic         = random.choice(TOPICS)
-    tone          = random.choice(TONES)
-    format_style  = random.choice(FORMATS)
+    topic        = random.choice(TOPICS)
+    tone         = random.choice(TONES)
+    format_style = random.choice(FORMATS)
+    is_thread    = random.random() < 0.30  # 30% chance of thread
+
+    post_type = "THREAD (6 tweets)" if is_thread else "SINGLE POST"
 
     print(f"\n{'='*60}")
     print(f"  X Post Agent — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
     if preview:
         print(f"  MODE: PREVIEW (no Buffer scheduling)")
+    print(f"  Type   : {post_type}")
     print(f"{'='*60}")
     print(f"  Niche  : {NICHE}")
     print(f"  Topic  : {topic}")
     print(f"  Tone   : {tone}")
-    print(f"  Format : {format_style[:60]}...")
+    if not is_thread:
+        print(f"  Format : {format_style[:60]}...")
     print(f"{'='*60}\n")
 
     try:
         research = research_topic(topic, NICHE)
-        post     = generate_post(topic, tone, format_style, NICHE, PERSONA, research)
+
+        if is_thread:
+            tweets = generate_thread(topic, tone, research)
+            if not tweets:
+                # Thread generation failed — fall through to single post
+                is_thread = False
+
+        if not is_thread:
+            post = generate_post(topic, tone, format_style, NICHE, PERSONA, research)
 
         if preview:
+            if is_thread:
+                print(f"  PREVIEW — Thread ({len(tweets)} tweets):")
+                for i, t in enumerate(tweets, 1):
+                    print(f"  [{i}] {t}\n")
             print(f"{'='*60}")
             print(f"  PREVIEW ONLY — post NOT sent to Buffer.")
             print(f"  Run without --preview to schedule it.")
             print(f"{'='*60}\n")
             return
 
-        post_id = schedule_to_buffer(post)
+        if is_thread:
+            post_id = schedule_thread_to_buffer(tweets)
+        else:
+            post_id = schedule_to_buffer(post)
 
+        label = "Thread" if is_thread else "Post"
         print(f"{'='*60}")
-        print(f"  Done! Post queued in Buffer → will publish to X")
+        print(f"  Done! {label} queued in Buffer → will publish to X")
         print(f"  Buffer ID : {post_id}")
         print(f"{'='*60}\n")
 
