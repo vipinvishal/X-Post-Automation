@@ -7,6 +7,10 @@ on:
     - cron: '30 13 * * *'  #  7:00 PM IST (UTC+5:30)
   workflow_dispatch:         # allow manual trigger from GitHub Actions tab
 
+# Force Node.js 24 for all actions (suppresses Node.js 20 deprecation warning)
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   post:
     runs-on: ubuntu-latest
@@ -23,13 +27,20 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Install Playwright Chromium (for infographic rendering)
+        run: python -m playwright install --with-deps chromium
+
       - name: Generate and schedule post
         run: python scripts/generate_and_schedule.py
         env:
-          GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_API_KEY_2:  ${{ secrets.GEMINI_API_KEY_2 }}
-          GROQ_API_KEY:      ${{ secrets.GROQ_API_KEY }}
-          EURON_API_KEY:     ${{ secrets.EURON_API_KEY }}
-          EXA_API_KEY:       ${{ secrets.EXA_API_KEY }}
-          BUFFER_API_KEY:    ${{ secrets.BUFFER_API_KEY }}
-          BUFFER_CHANNEL_ID: ${{ secrets.BUFFER_CHANNEL_ID }}
+          GEMINI_API_KEY:     ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY_2:   ${{ secrets.GEMINI_API_KEY_2 }}
+          GROQ_API_KEY:       ${{ secrets.GROQ_API_KEY }}
+          EURON_API_KEY:      ${{ secrets.EURON_API_KEY }}
+          EXA_API_KEY:        ${{ secrets.EXA_API_KEY }}
+          BUFFER_API_KEY:     ${{ secrets.BUFFER_API_KEY }}
+          BUFFER_CHANNEL_ID:  ${{ secrets.BUFFER_CHANNEL_ID }}
+          # Infographic image: IMGBB_API_KEY hosts the PNG so Buffer can attach it.
+          # If the secret is unset, the run auto-falls back to a text-only post.
+          IMGBB_API_KEY:      ${{ secrets.IMGBB_API_KEY }}
+          INFOGRAPHIC_HANDLE: ${{ vars.INFOGRAPHIC_HANDLE || '@VipinAIHub' }}

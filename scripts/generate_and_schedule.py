@@ -18,6 +18,8 @@ from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 
+import infographic
+
 # ── Load env (local dev; GitHub Actions injects env vars directly) ────────────
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"))
 load_dotenv()
@@ -30,6 +32,12 @@ EURON_API_KEY     = os.environ.get("EURON_API_KEY")
 EXA_API_KEY       = os.environ.get("EXA_API_KEY")
 BUFFER_API_KEY    = os.environ.get("BUFFER_API_KEY")
 BUFFER_CHANNEL_ID = os.environ.get("BUFFER_CHANNEL_ID")
+
+# ── Infographic image ─────────────────────────────────────────────────────────
+# When on, single posts get a rendered infographic PNG attached via Buffer.
+# Set INCLUDE_INFOGRAPHIC=0 to fall back to text-only (e.g. if imgbb key is missing).
+# Threads (multi-tweet) are always text-only — images don't attach to threads.
+INCLUDE_INFOGRAPHIC = os.environ.get("INCLUDE_INFOGRAPHIC", "1") not in ("0", "false", "False", "")
 
 GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
 GEMINI_FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-001"]
@@ -446,37 +454,46 @@ def _is_buffer_rate_limit(data: dict) -> bool:
     return "rate_limit_exceeded" in raw or "too many requests" in raw
 
 
-def schedule_to_buffer(post_text: str) -> str:
-    """Push the post to Buffer via GraphQL. Schedules 5 minutes from now."""
+def schedule_to_buffer(post_text: str, image_url: str = None) -> str:
+    """Push the post to Buffer via GraphQL. Schedules 5 minutes from now.
+
+    If image_url is given (a public URL), it is attached as a media image via
+    Buffer's assets field. Buffer cannot upload files — the URL must be public.
+    """
     print("[ Step 3 ] Scheduling to Buffer...")
+    if image_url:
+        print(f"  [Buffer] Attaching infographic: {image_url}")
 
     due_at = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
 
-    mutation = """
-    mutation CreatePost($text: String!, $channelId: ChannelId!, $dueAt: DateTime) {
-      createPost(input: {
+    asset_decl  = ", $imageUrl: String!" if image_url else ""
+    asset_field = "assets: [{ image: { url: $imageUrl } }]," if image_url else ""
+    mutation = f"""
+    mutation CreatePost($text: String!, $channelId: ChannelId!, $dueAt: DateTime{asset_decl}) {{
+      createPost(input: {{
         text: $text,
         channelId: $channelId,
         schedulingType: automatic,
         mode: customScheduled,
+        {asset_field}
         dueAt: $dueAt
-      }) {
-        ... on PostActionSuccess {
-          post {
+      }}) {{
+        ... on PostActionSuccess {{
+          post {{
             id
             text
-          }
-        }
-        ... on MutationError {
+          }}
+        }}
+        ... on MutationError {{
           message
-        }
-      }
-    }
+        }}
+      }}
+    }}
     """
 
     for attempt in range(1, MAX_RETRIES + 1):
         response = requests.post(
-            "https://api.buffer.com",
+            "https://api.buffer.com/graphql",
             headers={
                 "Content-Type": "application/json",
                 "Authorization": f"Bearer {BUFFER_API_KEY}",
@@ -487,9 +504,10 @@ def schedule_to_buffer(post_text: str) -> str:
                     "text": post_text,
                     "channelId": BUFFER_CHANNEL_ID,
                     "dueAt": due_at,
+                    **({"imageUrl": image_url} if image_url else {}),
                 },
             },
-            timeout=15,
+            timeout=30,
         )
 
         if response.status_code == 429:
@@ -603,6 +621,31 @@ def schedule_thread_to_buffer(tweets: list) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# STEP 3.5 — Infographic image (single posts only)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def build_infographic_image(research: str, topic: str, preview: bool):
+    """Render the infographic and (unless preview) host it for Buffer.
+
+    Returns a public image URL (real run), a local PNG path (preview), or None
+    on any failure — so a single rendering hiccup never kills the daily post.
+    """
+    try:
+        print("\n[ Step 3.5 ] Building infographic image...")
+        content  = infographic.generate_infographic_content(research, topic, generate_text)
+        out_dir  = os.path.join(_script_dir, "..", "output")
+        os.makedirs(out_dir, exist_ok=True)
+        png_path = os.path.abspath(os.path.join(out_dir, "infographic.png"))
+        infographic.render_infographic(content, png_path)
+        if preview:
+            return png_path
+        return infographic.upload_to_imgbb(png_path)
+    except Exception as e:
+        print(f"  [Infographic] Skipped — {e}. Falling back to text-only post.")
+        return None
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -644,16 +687,26 @@ def main(preview: bool = False):
                 print(f"  PREVIEW — Thread ({len(tweets)} tweets):")
                 for i, t in enumerate(tweets, 1):
                     print(f"  [{i}] {t}\n")
+            else:
+                image_ref = None
+                if INCLUDE_INFOGRAPHIC:
+                    image_ref = build_infographic_image(research, topic, preview=True)
+                if image_ref:
+                    print(f"  Infographic saved at: {image_ref}")
             print(f"{'='*60}")
             print(f"  PREVIEW ONLY — post NOT sent to Buffer.")
             print(f"  Run without --preview to schedule it.")
             print(f"{'='*60}\n")
             return
 
+        image_ref = None
+        if not is_thread and INCLUDE_INFOGRAPHIC:
+            image_ref = build_infographic_image(research, topic, preview=False)
+
         if is_thread:
             post_id = schedule_thread_to_buffer(tweets)
         else:
-            post_id = schedule_to_buffer(post)
+            post_id = schedule_to_buffer(post, image_ref)
 
         label = "Thread" if is_thread else "Post"
         print(f"{'='*60}")

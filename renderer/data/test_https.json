@@ -1,0 +1,26 @@
+{
+  "topic": "How HTTPS Encrypts Your Connection",
+  "headline_line1_pre": "How ",
+  "headline_line1_hl": "HTTPS",
+  "headline_line1_post": "",
+  "headline_line2": "Encrypts Your Connection",
+  "sub_pre": "A Secure Handshake In",
+  "sub_num": "3",
+  "sub_post": "Steps",
+  "stages": [
+    { "title": "Client Hello & Certificate", "subtitle": "Browser asks, server proves identity", "icon": "network", "arrow_note": "verify cert" },
+    { "title": "Key Exchange", "subtitle": "Shared secret via asymmetric crypto", "icon": "key", "arrow_note": "derive keys" },
+    { "title": "Encrypted Session", "subtitle": "All traffic sealed with symmetric keys", "icon": "lock", "arrow_note": "" }
+  ],
+  "explainers": [
+    { "tag": "The Certificate", "body": "A trusted <span class='k1'>Certificate Authority</span> signs the server's identity so your browser can <b>trust</b> it." },
+    { "tag": "The Handshake", "body": "Both sides agree on a <span class='k2'>shared secret</span> without ever sending it across the wire." },
+    { "tag": "The Tunnel", "body": "Symmetric encryption makes data <span class='k3'>fast and private</span> for the whole session." }
+  ],
+  "sticky1": "The padlock means <b>verified + encrypted!</b>",
+  "terminal_cmd": "curl -v https",
+  "sticky2": "HTTPS = <b>HTTP + TLS</b> underneath!",
+  "quote_main": "Modern TLS 1.3 cuts the handshake to <span class='n'>1 round trip</span> — <span class='h'>faster & safer.</span>",
+  "quote_sub": "Older TLS needed 2; every millisecond counts.",
+  "handle": "@VipinAIHub"
+}

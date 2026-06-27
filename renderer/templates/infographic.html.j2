@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  {{ font_css | safe }}
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  :root{
+    --ink:#1a1a1a;
+    --blue:#1f8fff;        --blue-fill:#e3f3ff;   --blue-band:#bfe9ff;  --blue-dark:#1565b0;
+    --green:#2fa64a;       --green-fill:#e7f7e3;  --green-band:#c7f0c2; --green-dark:#1f7a33;
+    --pink:#d6418a;        --pink-fill:#ffe6f2;   --pink-band:#ffd6ea;  --pink-dark:#b32d6c;
+    --yellow:#fff2a8;      --yellow-note:#fff7c0; --yellow-edge:#d8c84a;
+    --muted:#4a5560;       --spiral:#3a4750;
+  }
+
+  body{ font-family:'Kalam', cursive; background:#fff; }
+
+  .page{
+    width:900px; min-height:1120px; background:#fff;
+    position:relative; padding:36px 48px 28px 96px; overflow:hidden;
+  }
+
+  /* spiral binding */
+  .spiral-line{ position:absolute; left:56px; top:20px; bottom:20px; width:1.6px; background:var(--spiral); opacity:.5; }
+  .spiral{ position:absolute; left:30px; top:34px; bottom:30px; width:60px; }
+  .spiral .ring{ position:absolute; left:0; width:48px; height:18px; border:4.5px solid var(--spiral);
+    border-radius:50%; border-color:var(--spiral) transparent transparent transparent; transform:rotate(-18deg); }
+
+  /* ---------- header ---------- */
+  .header{ display:flex; justify-content:space-between; align-items:flex-start; gap:20px; }
+  .headline{ flex:1; padding-top:6px; }
+  .headline h1{ font-size:46px; font-weight:700; line-height:1.15; color:var(--ink);
+    font-family:'Caveat',cursive; letter-spacing:.5px; }
+  .headline .l1 .hl{ background:var(--yellow); padding:0 8px; border-radius:6px; }
+  .headline .l2{ color:var(--blue); display:inline-block; background:var(--blue-band);
+    padding:0 8px; border-radius:6px; margin-top:6px; }
+  .portrait{ width:190px; height:190px; flex:none; border-radius:14px; overflow:hidden; transform:rotate(2deg); }
+  .portrait img{ width:100%; height:100%; object-fit:cover; object-position:center top; }
+
+  /* ---------- subheadline pill ---------- */
+  .subpill{ margin:22px 0 26px; display:inline-flex; align-items:center; gap:12px;
+    background:var(--yellow); border:3px solid var(--ink); border-radius:26px;
+    padding:9px 26px; font-size:25px; font-weight:700; transform:rotate(-1deg); }
+  .subpill .num{ width:46px; height:46px; background:var(--blue); color:#fff; border:2.5px solid var(--ink);
+    border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; }
+
+  /* ---------- main 2-col body ---------- */
+  .body{ display:flex; gap:30px; }
+  .flow{ flex:none; width:400px; margin-left:58px; }
+  .side{ flex:1; padding-top:10px; }
+
+  /* stage boxes */
+  .stage{ display:flex; align-items:center; gap:16px; border:3px solid; border-radius:18px;
+    padding:14px 18px; min-height:96px; }
+  .stage.s1{ background:var(--blue-fill); border-color:var(--blue); transform:rotate(-.8deg); }
+  .stage.s2{ background:var(--green-fill); border-color:var(--green); transform:rotate(.8deg); }
+  .stage.s3{ background:var(--pink-fill); border-color:var(--pink); transform:rotate(-.8deg); }
+  .stage .num{ flex:none; width:52px; height:52px; border:2.5px solid var(--ink); border-radius:50%;
+    color:#fff; display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:700;
+    font-family:'Caveat',cursive; }
+  .s1 .num{ background:var(--blue);} .s2 .num{ background:var(--green);} .s3 .num{ background:var(--pink);}
+  .stage .icon{ flex:none; width:44px; display:flex; justify-content:center; }
+  .stage .txt{ flex:1; min-width:0; }
+  .stage .txt .t{ font-weight:700; color:var(--ink); line-height:1.05;
+    font-size:clamp(17px, 2.4vw, 24px); word-break:break-word; }
+  .stage .txt .s{ color:var(--muted); font-size:15px; line-height:1.1; margin-top:3px; }
+
+  /* arrow + note */
+  .arrow{ display:flex; flex-direction:column; align-items:center; margin:6px 0; padding-left:48px; }
+  .arrow svg{ width:34px; height:40px; }
+  .arrow .note{ background:var(--yellow-note); border:2px solid var(--yellow-edge); border-radius:6px;
+    padding:3px 12px; font-size:16px; font-weight:700; margin-top:4px; transform:rotate(-2deg);
+    font-family:'Kalam',cursive; }
+
+  /* side explainer blocks */
+  .explain{ margin-bottom:30px; }
+  .explain .tag{ display:inline-block; font-size:21px; font-weight:700; padding:2px 8px; border-radius:5px; }
+  .explain.e1 .tag{ background:var(--blue-band); color:var(--blue-dark); }
+  .explain.e2 .tag{ background:var(--green-band); color:var(--green-dark); }
+  .explain.e3 .tag{ background:var(--pink-band); color:var(--pink-dark); }
+  .explain p{ font-size:15px; color:#33424d; line-height:1.35; margin-top:6px; }
+  .explain .k1{ color:var(--blue); font-weight:700; }
+  .explain .k2{ color:var(--green); font-weight:700; }
+  .explain .k3{ color:var(--pink); font-weight:700; }
+  .explain b{ color:var(--ink); }
+
+  /* sticky notes (absolute, left gutter) */
+  .sticky{ position:absolute; left:16px; width:138px; padding:9px 11px; font-size:13px; line-height:1.25;
+    color:var(--ink); border:2px solid; z-index:5; box-shadow:1px 2px 4px rgba(0,0,0,.12);
+    overflow-wrap:anywhere; word-break:break-word; }
+  .sticky.note1{ top:392px; background:var(--yellow-note); border-color:var(--yellow-edge); transform:rotate(-5deg); }
+  .sticky.note1 b{ color:var(--blue); }
+  .sticky.term{ top:548px; left:18px; width:116px; background:#2c2c2a; border-color:var(--ink); border-radius:6px;
+    font-family:monospace; transform:rotate(-3deg); padding:8px 10px; }
+  .sticky.term .prompt{ color:#7CFC00; font-size:16px; }
+  .sticky.term .cmd{ color:var(--blue-band); font-size:11px; word-break:break-all; white-space:normal; }
+  .sticky.note2{ top:700px; background:var(--pink-fill); border-color:#e29ac0; transform:rotate(4deg); }
+  .sticky.note2 b{ color:var(--pink); }
+
+  .doodle-arrow{ position:absolute; width:64px; height:46px; z-index:4; }
+  .doodle-arrow.da1{ left:154px; top:430px; }
+  .doodle-arrow.da2{ left:136px; top:760px; }
+
+  /* quote banner */
+  .quote{ position:relative; margin-top:18px; background:var(--yellow); border:3px solid var(--ink);
+    border-radius:18px; padding:22px 70px; transform:rotate(-.8deg); }
+  .quote .mark{ position:absolute; font-size:74px; font-weight:700; color:#e0b400; font-family:Georgia,serif; line-height:1; }
+  .quote .mark.l{ left:22px; top:8px; } .quote .mark.r{ right:22px; bottom:-18px; }
+  .quote .big{ font-size:25px; font-weight:700; color:var(--ink); line-height:1.3; }
+  .quote .big .n{ color:var(--blue); } .quote .big .h{ color:var(--pink); }
+  .quote .sub{ font-size:16px; color:#33424d; margin-top:6px; }
+
+  .bulb{ position:absolute; right:30px; bottom:150px; width:54px; height:54px; }
+
+  /* footer */
+  .footer{ display:flex; align-items:center; gap:12px; margin-top:26px; }
+  .footer .ig{ width:32px; height:32px; border:2.8px solid var(--ink); border-radius:9px; position:relative; }
+  .footer .ig::before{ content:''; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:16px; height:16px; border:2.8px solid var(--ink); border-radius:50%; }
+  .footer .ig::after{ content:''; position:absolute; right:4px; top:4px; width:3px; height:3px; background:var(--ink); border-radius:50%; }
+  .footer .handle{ font-size:23px; font-weight:700; color:var(--ink); }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="spiral-line"></div>
+    <div class="spiral">
+      {% for i in range(28) %}<div class="ring" style="top:{{ i*38 }}px"></div>{% endfor %}
+    </div>
+
+    <!-- header -->
+    <div class="header">
+      <div class="headline">
+        <h1>
+          <span class="l1">{{ headline_line1_pre }}<span class="hl">{{ headline_line1_hl }}</span>{{ headline_line1_post }}</span><br>
+          <span class="l2">{{ headline_line2 }}</span>
+        </h1>
+      </div>
+      <div class="portrait"><img src="data:image/png;base64,{{ portrait_b64 }}"></div>
+    </div>
+
+    <!-- subheadline -->
+    <div class="subpill"><span>{{ sub_pre }}</span><span class="num">{{ sub_num }}</span><span>{{ sub_post }}</span></div>
+
+    <!-- body -->
+    <div class="body">
+      <div class="flow">
+        {% for st in stages %}
+        <div class="stage s{{ loop.index }}">
+          <div class="num">{{ loop.index }}</div>
+          <div class="icon">{{ st.icon | safe }}</div>
+          <div class="txt"><div class="t">{{ st.title }}</div><div class="s">{{ st.subtitle }}</div></div>
+        </div>
+        {% if not loop.last %}
+        <div class="arrow">
+          <svg viewBox="0 0 34 40"><path d="M17 2 C14 12, 20 20, 16 32" fill="none" stroke="#1a1a1a" stroke-width="2.6" stroke-linecap="round"/><path d="M9 25 C12 30, 15 33, 16 34 C17 32, 20 29, 24 26" fill="none" stroke="#1a1a1a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          {% if st.arrow_note %}<div class="note">{{ st.arrow_note }}</div>{% endif %}
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="side">
+        {% for ex in explainers %}
+        <div class="explain e{{ loop.index }}">
+          <span class="tag">{{ ex.tag }}</span>
+          <p>{{ ex.body | safe }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- sticky notes -->
+    <div class="sticky note1">{{ sticky1 | safe }}</div>
+    <svg class="doodle-arrow da1" viewBox="0 0 70 50"><path d="M4 8 C30 4, 50 18, 62 34" fill="none" stroke="#1a1a1a" stroke-width="2.4" stroke-linecap="round"/><path d="M52 30 C57 33, 60 34, 63 35 C62 31, 61 28, 60 24" fill="none" stroke="#1a1a1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="sticky term"><div class="prompt">&gt;_</div><div class="cmd">{{ terminal_cmd }}</div></div>
+    <div class="sticky note2">{{ sticky2 | safe }}</div>
+    <svg class="doodle-arrow da2" viewBox="0 0 70 50"><path d="M4 40 C30 46, 50 32, 62 16" fill="none" stroke="#1a1a1a" stroke-width="2.4" stroke-linecap="round"/><path d="M52 20 C57 17, 60 16, 63 15 C62 19, 61 22, 60 26" fill="none" stroke="#1a1a1a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+
+    <!-- quote -->
+    <div class="quote">
+      <span class="mark l">&ldquo;</span>
+      <div class="big">{{ quote_main | safe }}</div>
+      <div class="sub">{{ quote_sub }}</div>
+      <span class="mark r">&rdquo;</span>
+    </div>
+    <svg class="bulb" viewBox="0 0 60 60">
+      <circle cx="30" cy="26" r="18" fill="#fff2a8" stroke="#1a1a1a" stroke-width="2.5"/>
+      <rect x="22" y="42" width="16" height="10" rx="3" fill="#ffd24d" stroke="#1a1a1a" stroke-width="2.5"/>
+      <line x1="6" y1="22" x2="-2" y2="18" stroke="#e0b400" stroke-width="3" stroke-linecap="round"/>
+      <line x1="54" y1="22" x2="62" y2="18" stroke="#e0b400" stroke-width="3" stroke-linecap="round"/>
+      <line x1="30" y1="2" x2="30" y2="-6" stroke="#e0b400" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+
+    <!-- footer -->
+    <div class="footer"><div class="ig"></div><div class="handle">{{ handle }}</div></div>
+  </div>
+</body>
+</html>
