@@ -49,11 +49,43 @@ _script_dir = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(_script_dir, "topics.json"), "r") as f:
     _config = json.load(f)
 
-NICHE   = _config["niche"]
-PERSONA = _config["persona"]
-TOPICS  = _config["topics"]
-TONES   = _config["tones"]
-FORMATS = _config["formats"]
+NICHE         = _config["niche"]
+PERSONA       = _config["persona"]
+TOPICS        = _config["topics"]
+SERIES_TOPICS = _config.get("series_topics", {})
+TONES         = _config["tones"]
+FORMATS       = _config["formats"]
+
+# Day-of-week series routing (0=Mon, 2=Wed, 4=Fri)
+_SERIES_DAY_MAP = {
+    0: "RAG in the Wild",
+    2: "Cloud Architecture Drop",
+    4: "Agentic Build Log",
+}
+
+# ── Hashtag selection ─────────────────────────────────────────────────────────
+# X's character limit is 280. We reserve ~35 chars for hashtags appended after
+# the body, leaving a 245-char body budget. One line + 2 relevant tags per post.
+_BODY_CHAR_LIMIT = 245
+
+_HASHTAG_RULES = [
+    (("rag", "retrieval", "vector", "embedding", "chunk"),          "#RAG #LLMOps"),
+    (("agent", "agentic", "tool call", "autonomous", "build log"),  "#AgenticAI #BuildInPublic"),
+    (("aws", "lambda", "ec2", "s3", "bedrock", "cloud", "architect"), "#AWS #CloudArchitecture"),
+    (("fine-tun", "finetun", "training", "train"),                  "#LLMOps #AIEngineering"),
+    (("production", "deploy", "latency", "inference", "cost"),      "#LLMOps #AIEngineering"),
+    (("india", "delhi", "rupee", "₹", "solo founder", "budget"),   "#BuildInPublic #AIEngineering"),
+    (("build", "ship", "launch", "product", "founder"),             "#BuildInPublic #AIEngineering"),
+]
+_DEFAULT_HASHTAGS = "#AI #AIEngineering"
+
+
+def _pick_hashtags(post_text: str, topic: str) -> str:
+    combined = (post_text + " " + topic).lower()
+    for keywords, tags in _HASHTAG_RULES:
+        if any(k in combined for k in keywords):
+            return tags
+    return _DEFAULT_HASHTAGS
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -115,16 +147,22 @@ If there's a recent model release, paper, or announcement in the research — re
 If it's background info — pull one specific number or fact that makes your take feel grounded.
 Never cite the source. It should sound like you already knew this.
 
+━━━ FOLLOW MICRO-HOOK (use when it fits naturally) ━━━
+If the post is part of a series OR ends on a cliffhanger — end with one short line that gives a reason to follow.
+Examples:
+  "posting the fix tomorrow — follow so you don't miss it"
+  "architecture diagram drops friday"
+  "part 2 coming this week"
+Don't force it. Skip it if the post is self-contained.
+
 ━━━ HARD RULES ━━━
-- Max 280 characters
-- No hashtags
+- Max 245 characters (hashtags are added separately after — don't include them)
 - No emojis
 - No "I shipped X and learned Y" — it's overused
-- No question at the end unless the style calls for it
 - No hype words: game-changing, revolutionary, groundbreaking
 - Plain text only, no markdown
 
-OUTPUT: only the post. no quotes, no labels, nothing else.
+OUTPUT: only the post body. no quotes, no labels, no hashtags.
 """.strip()
 
 
@@ -367,15 +405,15 @@ def generate_post(topic: str, tone: str, format_style: str, niche: str, persona:
     post = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', post)
     post = post.strip()
 
-    # If over 280 chars, ask the model to shorten it (max 2 attempts)
+    # If over body budget, ask the model to shorten it (max 2 attempts)
     for shorten_attempt in range(2):
-        if len(post) <= 280:
+        if len(post) <= _BODY_CHAR_LIMIT:
             break
         print(f"  Post is {len(post)} chars — asking model to shorten (attempt {shorten_attempt + 1}/2)...")
         shorten_prompt = (
-            f"This X (Twitter) post is {len(post)} characters, which is over the 280-character limit.\n\n"
-            f"Shorten it to strictly under 275 characters while keeping the same structure, voice, and impact.\n"
-            f"Keep the hook, the story, the lesson, and the question. Cut filler words, not ideas.\n"
+            f"This X post body is {len(post)} characters, over the {_BODY_CHAR_LIMIT}-character budget.\n\n"
+            f"Shorten it to strictly under {_BODY_CHAR_LIMIT - 5} characters while keeping the same structure, voice, and impact.\n"
+            f"Keep the hook, the story, the lesson. Cut filler words, not ideas.\n"
             f"Plain text only — no markdown, no hashtags.\n\n"
             f"Original post:\n{post}\n\n"
             f"Output ONLY the shortened post. Nothing else."
@@ -384,6 +422,10 @@ def generate_post(topic: str, tone: str, format_style: str, niche: str, persona:
         post = _re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', post)
         post = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', post)
         post = post.strip()
+
+    # Append 2 relevant hashtags (always — they count toward the 280 limit)
+    hashtags = _pick_hashtags(post, topic)
+    post = post + f"\n\n{hashtags}"
 
     print(f"\n  Generated post:\n  {'─'*50}")
     for line in post.split("\n"):
@@ -650,7 +692,14 @@ def build_infographic_image(research: str, topic: str, preview: bool):
 # ══════════════════════════════════════════════════════════════════════════════
 
 def main(preview: bool = False):
-    topic        = random.choice(TOPICS)
+    # Series day routing: Mon=RAG, Wed=Cloud, Fri=Agentic; other days pick freely
+    weekday     = datetime.now(timezone.utc).weekday()
+    series_name = _SERIES_DAY_MAP.get(weekday)
+    if series_name and SERIES_TOPICS.get(series_name):
+        topic = random.choice(SERIES_TOPICS[series_name])
+    else:
+        topic = random.choice(TOPICS)
+
     tone         = random.choice(TONES)
     format_style = random.choice(FORMATS)
     is_thread    = random.random() < 0.30  # 30% chance of thread
@@ -664,6 +713,8 @@ def main(preview: bool = False):
     print(f"  Type   : {post_type}")
     print(f"{'='*60}")
     print(f"  Niche  : {NICHE}")
+    if series_name:
+        print(f"  Series : {series_name}")
     print(f"  Topic  : {topic}")
     print(f"  Tone   : {tone}")
     if not is_thread:

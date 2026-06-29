@@ -1,17 +1,9 @@
 {
   "niche": "AI development, solo building from India, LLMs in production",
 
-  "persona": "Solo AI founder in Delhi, India. Zero VC, zero team. Building real AI products with Claude, Cursor, and jugaad architecture. Raw takes on LLMs, RAG, and agents from someone actually shipping under real constraints — not theorizing from a funded office.",
+  "persona": "Solo AI founder in Delhi, India. Zero VC, zero team. Building real AI products with Claude, Cursor, and jugaad architecture. Raw takes on LLMs, RAG, and agents from someone actually shipping, not theorizing.",
 
   "topics": [
-    "What the latest model release actually changes for builders — and what it does not",
-    "The AI research paper published this week that will matter in 12 months",
-    "Why the AI news everyone shared this week is being completely misread",
-    "What the newest benchmark numbers actually mean for production applications",
-    "The underreported AI development this week that builders should care about",
-    "What recent AI funding rounds and shutdowns reveal about where the market is really going",
-    "Why the latest LLM release is not the breakthrough the press says it is",
-    "The new AI tool everyone is posting about and whether it is actually useful",
     "Why your AI agent passes every benchmark and fails every real user session",
     "The real reason AI demos work perfectly and production deployments fail",
     "Why fine-tuning is not the answer to your accuracy problem",
@@ -20,16 +12,57 @@
     "The difference between an AI demo and an AI product — it is not the model",
     "Why most AI agent frameworks are solving the wrong problem entirely",
     "The real signal that your AI feature is working — it is not the metric you track",
+    "What the latest model release actually changes for builders — and what it does not",
+    "Why the AI news everyone shared this week is being completely misread",
+    "The underreported AI development this week that builders should care about",
     "Building AI products in India with zero infra budget — what actually works",
     "What solo founders know about shipping AI that funded teams don't",
     "The real cost of building AI products when you cannot afford the premium APIs",
     "What 4 months of shipping AI products as a solo founder actually taught me",
     "Why building AI with zero funding forces you to write better code",
-    "The difference between building AI products with VC money and without it",
-    "What happens when you have to make every single API call count",
-    "Why the best AI architecture decisions I made came from having no budget",
-    "What it looks like to ship AI products with no team, no office, and no runway"
+    "The architecture decision I got wrong and rebuilt from scratch",
+    "What our production error logs actually look like — and what they reveal",
+    "The prompt engineering mistake that cost us real money in production",
+    "Why I stopped using the popular AI framework and what I replaced it with",
+    "The real AWS bill from running an AI product — before and after optimization",
+    "What I wish I knew before deploying my first LLM-powered feature",
+    "The latency problem nobody warned me about — and how we fixed it",
+    "How we cut our inference costs by 60% without changing the model",
+    "The monitoring setup that finally told me what was actually breaking"
   ],
+
+  "series_topics": {
+    "RAG in the Wild": [
+      "A real RAG failure I hit in production this week — and the actual fix",
+      "Why our RAG retrieval was silently returning wrong context for 3 weeks",
+      "The chunking strategy that finally fixed our RAG accuracy problem",
+      "What our vector similarity scores actually looked like vs what we expected",
+      "The query rewriting step that improved our RAG by 40% — here is how",
+      "Why our RAG passed every eval and still failed half our real users",
+      "The embedding model swap that broke everything — and what we learned",
+      "What happens when your RAG knowledge base goes stale in production"
+    ],
+    "Cloud Architecture Drop": [
+      "The AWS architecture behind our AI inference pipeline — real costs included",
+      "How we cut our LLM API costs by 60% with one architecture change",
+      "The Lambda vs EC2 decision for AI workloads — real numbers, real tradeoffs",
+      "What our AWS bill looked like before and after optimizing the AI stack",
+      "The S3 + Lambda + API Gateway pattern we use for async AI processing",
+      "Why we moved off the managed AI services and what we use instead",
+      "The caching layer that reduced our LLM API calls by half — architecture inside",
+      "Our full AI system architecture as a solo founder — diagram and cost breakdown"
+    ],
+    "Agentic Build Log": [
+      "What broke in our AI agent this week — and the fix that actually worked",
+      "The tool-calling failure that cost us 3 days — here is exactly what happened",
+      "Progress on our agentic system: what is working, what is not, what is next",
+      "The agent loop bug I did not see coming — how we caught and fixed it",
+      "What our agent's decision trace actually looks like in production logs",
+      "Why our agent kept choosing the wrong tool — the root cause was surprising",
+      "The memory architecture we rebuilt from scratch — and why the first attempt failed",
+      "One week of running an AI agent in production — the real numbers"
+    ]
+  },
 
   "tones": [
     "Confident and contrarian — state the uncomfortable truth without softening it",
