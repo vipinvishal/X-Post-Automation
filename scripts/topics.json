@@ -1,84 +1,83 @@
 {
-  "niche": "AI development, solo building from India, LLMs in production",
+  "niche": "AI technology education — how LLMs, transformers, RAG, agents, and the full AI stack actually work, explained from the inside",
 
-  "persona": "Solo AI founder in Delhi, India. Zero VC, zero team. Building real AI products with Claude, Cursor, and jugaad architecture. Raw takes on LLMs, RAG, and agents from someone actually shipping, not theorizing.",
+  "persona": "A technical AI builder who explains how the technology actually works — real mechanisms, not marketing. Goes deep on what's happening inside the model, the training process, and the system architecture. Makes complex AI concepts clear without dumbing them down.",
 
   "topics": [
-    "Why your AI agent passes every benchmark and fails every real user session",
-    "The real reason AI demos work perfectly and production deployments fail",
-    "Why fine-tuning is not the answer to your accuracy problem",
-    "What junior developers get right about AI that senior engineers get wrong",
-    "Why retrieval-augmented generation fails quietly in production for most teams",
-    "The difference between an AI demo and an AI product — it is not the model",
-    "Why most AI agent frameworks are solving the wrong problem entirely",
-    "The real signal that your AI feature is working — it is not the metric you track",
-    "What the latest model release actually changes for builders — and what it does not",
-    "Why the AI news everyone shared this week is being completely misread",
-    "The underreported AI development this week that builders should care about",
-    "Building AI products in India with zero infra budget — what actually works",
-    "What solo founders know about shipping AI that funded teams don't",
-    "The real cost of building AI products when you cannot afford the premium APIs",
-    "What 4 months of shipping AI products as a solo founder actually taught me",
-    "Why building AI with zero funding forces you to write better code",
-    "The architecture decision I got wrong and rebuilt from scratch",
-    "What our production error logs actually look like — and what they reveal",
-    "The prompt engineering mistake that cost us real money in production",
-    "Why I stopped using the popular AI framework and what I replaced it with",
-    "The real AWS bill from running an AI product — before and after optimization",
-    "What I wish I knew before deploying my first LLM-powered feature",
-    "The latency problem nobody warned me about — and how we fixed it",
-    "How we cut our inference costs by 60% without changing the model",
-    "The monitoring setup that finally told me what was actually breaking"
+    "What attention mechanism actually computes — not the 'finds related words' explanation",
+    "Why LLMs hallucinate — the real technical reason at the model level",
+    "What vector embeddings actually represent and why cosine similarity works",
+    "What the KV cache is and why it makes token generation faster after the first token",
+    "How RAG retrieval actually works under the hood — what the model sees vs what you sent",
+    "What tokenization does before the model ever sees your text",
+    "How temperature and top-p actually control generation — what's happening in the probability distribution",
+    "What fine-tuning actually changes in a model — which weights, by how much, and why",
+    "How RLHF trains models to follow instructions — the actual mechanism",
+    "What quantization does to a model and what you sacrifice for the speed gain",
+    "How speculative decoding makes inference faster without changing the output",
+    "What context window limits actually mean technically — why longer isn't free",
+    "How diffusion models generate images step by step — what each denoising step does",
+    "What mixture-of-experts does — how tokens get routed to different expert networks",
+    "How function calling is actually implemented at the API level",
+    "What chain-of-thought prompting actually triggers in the model",
+    "How LoRA fine-tuning works with a fraction of the trainable parameters",
+    "What prompt caching is and how it saves compute on repeated prefixes",
+    "What model distillation actually transfers from teacher to student",
+    "How backpropagation actually adjusts weights — the gradient flow explained",
+    "What the attention sink phenomenon is and why the first token matters",
+    "How in-context learning works — what the model is actually doing with few-shot examples",
+    "What perplexity actually measures and why it matters for evaluating language models",
+    "How RLHF differs from DPO — the real trade-off between the two training approaches",
+    "What constitutional AI training actually does to change model behavior"
   ],
 
   "series_topics": {
-    "RAG in the Wild": [
-      "A real RAG failure I hit in production this week — and the actual fix",
-      "Why our RAG retrieval was silently returning wrong context for 3 weeks",
-      "The chunking strategy that finally fixed our RAG accuracy problem",
-      "What our vector similarity scores actually looked like vs what we expected",
-      "The query rewriting step that improved our RAG by 40% — here is how",
-      "Why our RAG passed every eval and still failed half our real users",
-      "The embedding model swap that broke everything — and what we learned",
-      "What happens when your RAG knowledge base goes stale in production"
+    "How It Actually Works": [
+      "What attention mechanism actually computes — the math behind 'finding related words'",
+      "How the KV cache works — why your first token is slow and the rest are fast",
+      "What temperature actually does to the probability distribution over next tokens",
+      "How tokenization breaks your text before the model ever processes it",
+      "What embeddings actually encode — and what cosine similarity is really measuring",
+      "How backpropagation flows gradients backward through a neural network",
+      "What in-context learning is actually doing when you give the model examples",
+      "How speculative decoding generates multiple tokens in one forward pass"
     ],
-    "Cloud Architecture Drop": [
-      "The AWS architecture behind our AI inference pipeline — real costs included",
-      "How we cut our LLM API costs by 60% with one architecture change",
-      "The Lambda vs EC2 decision for AI workloads — real numbers, real tradeoffs",
-      "What our AWS bill looked like before and after optimizing the AI stack",
-      "The S3 + Lambda + API Gateway pattern we use for async AI processing",
-      "Why we moved off the managed AI services and what we use instead",
-      "The caching layer that reduced our LLM API calls by half — architecture inside",
-      "Our full AI system architecture as a solo founder — diagram and cost breakdown"
+    "AI Stack Explained": [
+      "How RAG retrieval actually works — chunk, embed, retrieve, rerank, generate",
+      "What happens inside a function call from prompt to tool execution and back",
+      "How an AI agent loop works — planning, tool selection, observation, repeat",
+      "The full inference pipeline: tokenize → forward pass → sample → detokenize",
+      "How vector databases index and search embeddings at scale",
+      "What a fine-tuning run actually looks like step by step",
+      "How prompt caching works in the inference stack and when it kicks in",
+      "The architecture of a production RAG system — every component explained"
     ],
-    "Agentic Build Log": [
-      "What broke in our AI agent this week — and the fix that actually worked",
-      "The tool-calling failure that cost us 3 days — here is exactly what happened",
-      "Progress on our agentic system: what is working, what is not, what is next",
-      "The agent loop bug I did not see coming — how we caught and fixed it",
-      "What our agent's decision trace actually looks like in production logs",
-      "Why our agent kept choosing the wrong tool — the root cause was surprising",
-      "The memory architecture we rebuilt from scratch — and why the first attempt failed",
-      "One week of running an AI agent in production — the real numbers"
+    "AI Research Decoded": [
+      "What the latest transformer architecture paper actually changed and why it matters",
+      "What this week's AI benchmark results actually tell us — and what they don't",
+      "The AI research finding from this week that most people are misreading",
+      "What the new training method in this week's paper actually does differently",
+      "The underreported AI research result this week that builders should understand",
+      "What the latest model architecture paper means for how we build AI products",
+      "The AI safety paper published this week — what it actually found",
+      "What this week's AI research reveals about how scaling laws are changing"
     ]
   },
 
   "tones": [
-    "Confident and contrarian — state the uncomfortable truth without softening it",
-    "Informed analyst — you followed the latest development closely and have a take nobody else has said",
-    "Blunt and direct — no hedging, no maybe, no it depends",
-    "Storytelling with tension — something went wrong or right, here is exactly what and why",
-    "Provocative comparison — everyone believes X about the latest news, here is why that is backwards",
-    "India founder voice — raw, constraint-driven, zero-budget reality. nobody else on AI Twitter owns this angle"
+    "Technical truth-teller — explain what's actually happening, not the simplified marketing version",
+    "Myth-buster — what everyone says vs what actually happens in the model. clear contrast.",
+    "First principles — build the explanation from the ground up. no assumptions about prior knowledge.",
+    "Builder's discovery — what you find out when you actually implement this and look under the hood",
+    "Research decoder — what the paper actually says, stripped of academic language",
+    "Surprising mechanism — one technically true thing that most people don't know or get wrong"
   ],
 
   "formats": [
-    "one-liner — a single sentence. the entire take, nothing added. if it needs two sentences, it is probably too long. cut to the bone.",
-    "ultra-short punch — 2-3 short lines max. a thought that escaped your head. no setup, no conclusion. just the sharp take.",
-    "quick hot take — 2-4 short lines, reads like a thought you just had. don't over-explain it. end when you have made your point.",
-    "short personal moment — something that actually happened, told plainly with one specific detail. no lesson required at the end.",
-    "reaction to news — sounds like you just read something and opened X to respond. casual, immediate, a little annoyed or surprised.",
-    "unpopular opinion — something you believe that most people in AI would push back on. written like you are fine getting ratio'd."
+    "mechanism in plain language — explain how one AI concept actually works. specific, accurate, no jargon soup. 2-4 short lines.",
+    "myth vs reality — 'everyone thinks X. what actually happens: Y.' one clear, specific contrast. end with the correct version.",
+    "one surprising fact — a single thing that is technically true and non-obvious. no setup needed. just the fact and what it means.",
+    "step-by-step breakdown — how something works in 3-4 concrete steps. each step is one short line. builds to the insight.",
+    "concept comparison — two things that seem similar but work completely differently. nail the key difference in 2-3 lines."
   ]
 }
