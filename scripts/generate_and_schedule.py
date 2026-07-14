@@ -160,9 +160,10 @@ Wrong tone:
   "we implemented this at..." (team/company)
 
 ━━━ FOLLOW MICRO-HOOK (when it fits naturally) ━━━
-If the concept has a natural next step — one short line hinting what's next.
-Examples: "going into the math next" / "part 2 on friday" / "next: why this breaks at long context"
-Skip if the post is fully self-contained.
+One short line at the end — pick whichever fits, skip if nothing does naturally:
+  - Next step hint: "going into the math next" / "part 2 on friday" / "next: why this breaks at long context"
+  - Portfolio callout: "building a full AI explainer library — link in bio"
+Never force it. If the post is complete on its own, end there.
 
 ━━━ HARD RULES ━━━
 - Max 245 characters (hashtags get added after — don't include them)
@@ -190,8 +191,11 @@ Tweet 1 (HOOK): The surprising truth or the thing most people get wrong about th
             "TIL why LLMs can't do math. the reason is weirder than you'd think:"
 Tweet 2-4 (MECHANISM): The actual explanation, one concrete step per tweet. Numbered 2/, 3/, 4/. Technically precise. Each tweet stands alone.
 Tweet 5 (THE INSIGHT): What this understanding actually changes — the mental model shift or the practical implication for anyone building with AI.
-Tweet 6 (CTA): Invite follow. Learning-in-public angle.
-  Example: "follow if you want the real explanations — I go through one AI/ML concept per day."
+Tweet 6 (CTA): Invite follow + mention portfolio. Embed the URL naturally in a sentence.
+  URL to include: {portfolio_url}
+  Examples:
+    "documenting these deep dives at {portfolio_url} — one AI/ML concept a day, properly explained. follow to keep up."
+    "i go through one AI/ML concept per day and build explainers at {portfolio_url}. follow if you want the real thing."
 
 ━━━ VOICE ━━━
 Right (engineer learning in public):
@@ -463,6 +467,7 @@ def generate_thread(topic: str, tone: str, research: str) -> list:
         topic=topic,
         tone=tone,
         research=research[:2000],
+        portfolio_url=PORTFOLIO_URL,
     )
 
     raw = generate_text(prompt, SYSTEM_PROMPT)
@@ -481,10 +486,10 @@ def generate_thread(topic: str, tone: str, research: str) -> list:
         if len(tweet) > 280:
             tweets[i] = tweet[:277] + "..."
 
-    # Append portfolio URL to last tweet if it fits
+    # Append portfolio URL to last tweet if the model didn't include it
     if tweets and PORTFOLIO_URL:
         url_suffix = f"\n\n{PORTFOLIO_URL}"
-        if len(tweets[-1]) + len(url_suffix) <= 280:
+        if PORTFOLIO_URL not in tweets[-1] and len(tweets[-1]) + len(url_suffix) <= 280:
             tweets[-1] = tweets[-1] + url_suffix
 
     print(f"\n  Generated {len(tweets)}-tweet thread:")
