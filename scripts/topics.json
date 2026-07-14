@@ -1,83 +1,93 @@
 {
-  "niche": "AI technology education — how LLMs, transformers, RAG, agents, and the full AI stack actually work, explained from the inside",
+  "niche": "AI/ML engineering — how modern AI actually works under the hood, learned and explained daily by an engineer",
 
-  "persona": "A technical AI builder who explains how the technology actually works — real mechanisms, not marketing. Goes deep on what's happening inside the model, the training process, and the system architecture. Makes complex AI concepts clear without dumbing them down.",
+  "persona": "An engineer who studies AI/ML every single day and explains how it actually works — LLMs, transformers, attention, RAG, agents, fine-tuning, embeddings, inference — in plain but technically real depth. Not a founder, not a hype account, not a CEO. Someone who reads the papers and docs, builds small experiments, and shares the actual mental models and gotchas. Learning in public, one concept at a time.",
 
   "topics": [
-    "What attention mechanism actually computes — not the 'finds related words' explanation",
-    "Why LLMs hallucinate — the real technical reason at the model level",
-    "What vector embeddings actually represent and why cosine similarity works",
-    "What the KV cache is and why it makes token generation faster after the first token",
-    "How RAG retrieval actually works under the hood — what the model sees vs what you sent",
-    "What tokenization does before the model ever sees your text",
-    "How temperature and top-p actually control generation — what's happening in the probability distribution",
-    "What fine-tuning actually changes in a model — which weights, by how much, and why",
-    "How RLHF trains models to follow instructions — the actual mechanism",
-    "What quantization does to a model and what you sacrifice for the speed gain",
-    "How speculative decoding makes inference faster without changing the output",
-    "What context window limits actually mean technically — why longer isn't free",
-    "How diffusion models generate images step by step — what each denoising step does",
-    "What mixture-of-experts does — how tokens get routed to different expert networks",
-    "How function calling is actually implemented at the API level",
-    "What chain-of-thought prompting actually triggers in the model",
-    "How LoRA fine-tuning works with a fraction of the trainable parameters",
-    "What prompt caching is and how it saves compute on repeated prefixes",
-    "What model distillation actually transfers from teacher to student",
-    "How backpropagation actually adjusts weights — the gradient flow explained",
-    "What the attention sink phenomenon is and why the first token matters",
-    "How in-context learning works — what the model is actually doing with few-shot examples",
-    "What perplexity actually measures and why it matters for evaluating language models",
-    "How RLHF differs from DPO — the real trade-off between the two training approaches",
-    "What constitutional AI training actually does to change model behavior"
+    "How attention works inside a transformer — intuition first, then the actual math",
+    "What tokenization really is and why it quietly breaks LLMs on numbers, spaces, and code",
+    "RAG end to end — chunking, embeddings, retrieval, reranking, and where it silently fails",
+    "What embeddings actually represent and why cosine similarity works at all",
+    "Vector databases and approximate nearest neighbor search — how HNSW actually indexes",
+    "Fine-tuning vs prompting vs RAG — when each one is actually the right answer",
+    "LoRA and QLoRA — how you fine-tune a 70B model on one consumer GPU",
+    "Quantization explained — INT8, INT4, GGUF, and how models shrink without falling apart",
+    "Mixture of Experts — why a 100B parameter model can be cheap to run",
+    "The KV cache — why LLM inference is slow on the first token and fast on the rest",
+    "How context windows actually work and why long context still degrades at the edges",
+    "Diffusion models — how random noise becomes a coherent image, step by step",
+    "Temperature, top-p, and top-k — what sampling actually does to model outputs",
+    "AI agents from scratch — the ReAct loop, tool calls, and where they reliably break",
+    "Model Context Protocol — what problem it actually solves and how it works",
+    "Why LLMs hallucinate — the real technical reasons, not the hand-wavy ones",
+    "RLHF explained — how a reward model turns a base LLM into an assistant",
+    "Chain-of-thought and reasoning models — what changed inside the model, not just the output",
+    "How function and tool calling actually works inside an LLM at inference time",
+    "Structured output and JSON mode — how models are constrained to a schema",
+    "Speculative decoding — how a small draft model speeds up a large one",
+    "Batching and throughput — why the API feels fast but a local model feels slow",
+    "Multimodal models — how images and text end up in the same representation space",
+    "Backpropagation and gradient descent — the one idea that everything in deep learning rests on",
+    "Why transformers replaced RNNs — the parallelism and long-range dependency argument",
+    "Prompt engineering as a real discipline — what techniques reliably move outputs",
+    "Evaluations and benchmarks — why leaderboard numbers mislead and how to eval properly",
+    "Running LLMs locally — llama.cpp, Ollama, and the real trade-offs",
+    "Semantic search vs keyword search — what embeddings buy you and what they cost",
+    "Guardrails and prompt injection — why it's still an unsolved security problem",
+    "How a tokenizer, an embedding layer, and attention connect into one full forward pass",
+    "Positional encodings — how a transformer knows word order at all"
   ],
 
   "series_topics": {
     "How It Actually Works": [
-      "What attention mechanism actually computes — the math behind 'finding related words'",
-      "How the KV cache works — why your first token is slow and the rest are fast",
-      "What temperature actually does to the probability distribution over next tokens",
-      "How tokenization breaks your text before the model ever processes it",
-      "What embeddings actually encode — and what cosine similarity is really measuring",
-      "How backpropagation flows gradients backward through a neural network",
-      "What in-context learning is actually doing when you give the model examples",
-      "How speculative decoding generates multiple tokens in one forward pass"
+      "How attention computes its output — query, key, value, and the weighted sum explained",
+      "How the KV cache works — the exact optimization that makes generation fast after token 1",
+      "What temperature actually does to the probability distribution — the sampling math",
+      "How tokenization splits your text before the model ever sees it — BPE explained",
+      "What embeddings actually encode — and what cosine similarity is geometrically measuring",
+      "How backpropagation flows gradients backward — the chain rule in practice",
+      "What in-context learning is really doing when you give the model a few examples",
+      "How speculative decoding generates multiple tokens in a single forward pass"
     ],
-    "AI Stack Explained": [
-      "How RAG retrieval actually works — chunk, embed, retrieve, rerank, generate",
-      "What happens inside a function call from prompt to tool execution and back",
-      "How an AI agent loop works — planning, tool selection, observation, repeat",
-      "The full inference pipeline: tokenize → forward pass → sample → detokenize",
-      "How vector databases index and search embeddings at scale",
-      "What a fine-tuning run actually looks like step by step",
-      "How prompt caching works in the inference stack and when it kicks in",
-      "The architecture of a production RAG system — every component explained"
-    ],
-    "AI Research Decoded": [
+    "Paper Breakdown": [
       "What the latest transformer architecture paper actually changed and why it matters",
-      "What this week's AI benchmark results actually tell us — and what they don't",
-      "The AI research finding from this week that most people are misreading",
-      "What the new training method in this week's paper actually does differently",
-      "The underreported AI research result this week that builders should understand",
-      "What the latest model architecture paper means for how we build AI products",
-      "The AI safety paper published this week — what it actually found",
-      "What this week's AI research reveals about how scaling laws are changing"
+      "The original RLHF paper — what the training loop actually looks like step by step",
+      "What the LoRA paper actually proved and why the low-rank decomposition works",
+      "The Attention Is All You Need paper — what it actually introduced and what it didn't",
+      "What the latest AI benchmark paper actually measures vs what it claims to measure",
+      "The constitutional AI paper — what training on model-written feedback actually does",
+      "What the RAG paper introduced — the original retrieval-augmented generation setup",
+      "What this week's most important AI paper actually found — the technical substance"
+    ],
+    "Build and Learn": [
+      "What I learned implementing a basic attention layer from scratch",
+      "What building a minimal RAG pipeline taught me that tutorials skip",
+      "What happens when you trace through a transformer forward pass step by step",
+      "What I found implementing backpropagation from scratch without a framework",
+      "What tracing through a prompt injection attack teaches you about how LLMs parse text",
+      "What running a quantized model locally shows you about the accuracy trade-off",
+      "What implementing a simple agent loop reveals about where they actually break",
+      "What I learned studying a real hallucination failure — tracing it to the token probabilities"
     ]
   },
 
   "tones": [
-    "Technical truth-teller — explain what's actually happening, not the simplified marketing version",
-    "Myth-buster — what everyone says vs what actually happens in the model. clear contrast.",
-    "First principles — build the explanation from the ground up. no assumptions about prior knowledge.",
-    "Builder's discovery — what you find out when you actually implement this and look under the hood",
-    "Research decoder — what the paper actually says, stripped of academic language",
-    "Surprising mechanism — one technically true thing that most people don't know or get wrong"
+    "Deep dive — explain the concept from first principles, build it up piece by piece, no hand-waving",
+    "TIL / learning in public — something I finally understood today, shared honestly as a discovery",
+    "Myth-busting — correct one common misconception about how AI actually works, with the real version",
+    "Analogy-driven — one clean analogy that makes a hard concept genuinely click",
+    "Under the hood — what literally happens inside the model, step by step, during a forward pass",
+    "Engineering gotcha — a subtle failure mode and the mental model that explains and fixes it",
+    "Technical trade-off — two approaches compared by their real costs and mechanisms, not hype",
+    "Paper breakdown — the actual technical substance of a paper or release, minus the marketing"
   ],
 
   "formats": [
-    "mechanism in plain language — explain how one AI concept actually works. specific, accurate, no jargon soup. 2-4 short lines.",
-    "myth vs reality — 'everyone thinks X. what actually happens: Y.' one clear, specific contrast. end with the correct version.",
-    "one surprising fact — a single thing that is technically true and non-obvious. no setup needed. just the fact and what it means.",
-    "step-by-step breakdown — how something works in 3-4 concrete steps. each step is one short line. builds to the insight.",
-    "concept comparison — two things that seem similar but work completely differently. nail the key difference in 2-3 lines."
+    "learning-in-public moment — 'I finally understand X. here is what it actually is.' 2-3 lines, honest, first-person discovery.",
+    "mechanism in plain language — explain how one concept works. specific, accurate, no jargon soup. 2-4 short lines.",
+    "myth vs reality — 'everyone thinks X. what actually happens: Y.' one clear, specific contrast.",
+    "one surprising fact — a single thing that is technically true and non-obvious. just the fact and what it means.",
+    "step-by-step breakdown — how something works in 3-4 concrete steps. each step is one short line.",
+    "concept comparison — two things that seem similar but work differently. nail the key difference in 2-3 lines."
   ]
 }
