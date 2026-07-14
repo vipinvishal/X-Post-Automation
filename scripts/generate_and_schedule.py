@@ -41,7 +41,7 @@ INCLUDE_INFOGRAPHIC = os.environ.get("INCLUDE_INFOGRAPHIC", "1") not in ("0", "f
 
 # Portfolio URL appended to the last tweet of every thread (not single posts —
 # X suppresses text posts that contain external links in feeds).
-PORTFOLIO_URL = os.environ.get("PORTFOLIO_URL", "vipin-vishal.onrender.com")
+PORTFOLIO_URL = os.environ.get("PORTFOLIO_URL", "https://vipin-vishal.onrender.com")
 
 GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
 GEMINI_FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-001"]

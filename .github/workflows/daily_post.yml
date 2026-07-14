@@ -44,4 +44,4 @@ jobs:
           # If the secret is unset, the run auto-falls back to a text-only post.
           IMGBB_API_KEY:      ${{ secrets.IMGBB_API_KEY }}
           INFOGRAPHIC_HANDLE: ${{ vars.INFOGRAPHIC_HANDLE || '@VipinAIHub' }}
-          PORTFOLIO_URL:      ${{ vars.PORTFOLIO_URL || 'vipin-vishal.onrender.com' }}
+          PORTFOLIO_URL:      ${{ vars.PORTFOLIO_URL || 'https://vipin-vishal.onrender.com' }}
