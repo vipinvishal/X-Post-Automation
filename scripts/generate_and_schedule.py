@@ -39,6 +39,10 @@ BUFFER_CHANNEL_ID = os.environ.get("BUFFER_CHANNEL_ID")
 # Threads (multi-tweet) are always text-only — images don't attach to threads.
 INCLUDE_INFOGRAPHIC = os.environ.get("INCLUDE_INFOGRAPHIC", "1") not in ("0", "false", "False", "")
 
+# Portfolio URL appended to the last tweet of every thread (not single posts —
+# X suppresses text posts that contain external links in feeds).
+PORTFOLIO_URL = os.environ.get("PORTFOLIO_URL", "vipin-vishal.onrender.com")
+
 GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
 GEMINI_FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-001"]
 MAX_RETRIES            = 4
@@ -476,6 +480,12 @@ def generate_thread(topic: str, tone: str, research: str) -> list:
     for i, tweet in enumerate(tweets):
         if len(tweet) > 280:
             tweets[i] = tweet[:277] + "..."
+
+    # Append portfolio URL to last tweet if it fits
+    if tweets and PORTFOLIO_URL:
+        url_suffix = f"\n\n{PORTFOLIO_URL}"
+        if len(tweets[-1]) + len(url_suffix) <= 280:
+            tweets[-1] = tweets[-1] + url_suffix
 
     print(f"\n  Generated {len(tweets)}-tweet thread:")
     print(f"  {'─'*50}")
