@@ -32,8 +32,7 @@ _RENDER_PY  = _RENDERER / "render.py"
 # ── Config ──────────────────────────────────────────────────────────────────────
 # Handle shown on the infographic. Change to your brand without touching code,
 # e.g. INFOGRAPHIC_HANDLE="@orbitailabs".
-INFOGRAPHIC_HANDLE = os.environ.get("INFOGRAPHIC_HANDLE", "@VipinAIHub")
-PORTFOLIO_URL      = os.environ.get("PORTFOLIO_URL", "https://vipin-vishal.onrender.com")
+INFOGRAPHIC_HANDLE = os.environ.get("INFOGRAPHIC_HANDLE", "@VipinAILabs")
 IMGBB_API_KEY      = os.environ.get("IMGBB_API_KEY", "")
 
 # Icons the renderer ships with (renderer/icons.py).
@@ -146,7 +145,6 @@ def _coerce(data: dict) -> dict:
 
     data["sub_num"] = str(data.get("sub_num", "3"))
     data["handle"] = INFOGRAPHIC_HANDLE
-    data["portfolio_url"] = PORTFOLIO_URL
     for key in _REQUIRED_KEYS:
         data.setdefault(key, "")
     return data

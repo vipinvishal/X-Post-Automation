@@ -68,9 +68,10 @@ _SERIES_DAY_MAP = {
 }
 
 # ── Hashtag selection ─────────────────────────────────────────────────────────
-# X's character limit is 280. We reserve ~35 chars for hashtags appended after
-# the body, leaving a 245-char body budget. One line + 2 relevant tags per post.
-_BODY_CHAR_LIMIT = 245
+# X's character limit is 280. X counts any URL as exactly 23 chars (t.co).
+# Budget: 280 - 25 (URL + \n\n) - 32 (hashtags + \n\n) = 223 → use 220 with margin.
+_BODY_CHAR_LIMIT  = 220
+_URL_TCOLEN       = 23   # X wraps all URLs to t.co links, always 23 chars
 
 _HASHTAG_RULES = [
     (("transformer", "attention", "self-attention", "multi-head"),     "#Transformers #MachineLearning"),
@@ -429,6 +430,7 @@ def generate_post(topic: str, tone: str, format_style: str, niche: str, persona:
         shorten_prompt = (
             f"This X post body is {len(post)} characters, over the {_BODY_CHAR_LIMIT}-character budget.\n\n"
             f"Shorten it to strictly under {_BODY_CHAR_LIMIT - 5} characters while keeping the same structure, voice, and impact.\n"
+            f"(The final post also gets hashtags + a URL appended — keep this body tight.)\n"
             f"Keep the hook, the story, the lesson. Cut filler words, not ideas.\n"
             f"Plain text only — no markdown, no hashtags.\n\n"
             f"Original post:\n{post}\n\n"
@@ -439,18 +441,25 @@ def generate_post(topic: str, tone: str, format_style: str, niche: str, persona:
         post = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', post)
         post = post.strip()
 
-    # Append 2 relevant hashtags (always — they count toward the 280 limit)
+    # Append 2 relevant hashtags + clickable portfolio URL
     hashtags = _pick_hashtags(post, topic)
     post = post + f"\n\n{hashtags}"
+    if PORTFOLIO_URL:
+        post = post + f"\n\n{PORTFOLIO_URL}"
+
+    # X counts any URL as 23 chars (t.co) regardless of raw length
+    x_len = len(post)
+    if PORTFOLIO_URL and PORTFOLIO_URL in post:
+        x_len = x_len - len(PORTFOLIO_URL) + _URL_TCOLEN
 
     print(f"\n  Generated post:\n  {'─'*50}")
     for line in post.split("\n"):
         print(f"  {line}")
     print(f"  {'─'*50}")
-    print(f"  Character count: {len(post)}/280\n")
+    print(f"  Character count: {len(post)} raw / {x_len} X-chars (max 280)\n")
 
-    if len(post) > 280:
-        raise ValueError(f"Post still too long ({len(post)} chars) after shortening attempts.")
+    if x_len > 280:
+        raise ValueError(f"Post still too long ({x_len} X-chars) after shortening attempts.")
 
     return post
 

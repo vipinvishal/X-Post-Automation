@@ -163,7 +163,7 @@ python scripts/generate_and_schedule.py
 | Variable | Default | Purpose |
 |---|---|---|
 | `INCLUDE_INFOGRAPHIC` | `1` | Set to `0` to disable infographic generation entirely |
-| `INFOGRAPHIC_HANDLE` | `@VipinAIHub` | Handle shown on infographic |
+| `INFOGRAPHIC_HANDLE` | `@VipinAILabs` | Handle shown on infographic |
 | `GEMINI_MODEL` | `gemini-2.0-flash` | Primary Gemini model |
 
 ### Finding your Buffer Channel ID
@@ -185,7 +185,7 @@ Go to **Settings → Secrets and variables → Actions** and add:
 
 **Secrets:** `GEMINI_API_KEY`, `GEMINI_API_KEY_2`, `GROQ_API_KEY`, `EURON_API_KEY`, `EXA_API_KEY`, `BUFFER_API_KEY`, `BUFFER_CHANNEL_ID`, `IMGBB_API_KEY`
 
-**Variables:** `INFOGRAPHIC_HANDLE` (e.g. `@VipinAIHub`)
+**Variables:** `INFOGRAPHIC_HANDLE` (e.g. `@VipinAILabs`)
 
 ### 2. The workflow runs automatically
 

@@ -43,5 +43,5 @@ jobs:
           # Infographic image: IMGBB_API_KEY hosts the PNG so Buffer can attach it.
           # If the secret is unset, the run auto-falls back to a text-only post.
           IMGBB_API_KEY:      ${{ secrets.IMGBB_API_KEY }}
-          INFOGRAPHIC_HANDLE: ${{ vars.INFOGRAPHIC_HANDLE || '@VipinAIHub' }}
+          INFOGRAPHIC_HANDLE: ${{ vars.INFOGRAPHIC_HANDLE || '@VipinAILabs' }}
           PORTFOLIO_URL:      ${{ vars.PORTFOLIO_URL || 'https://vipin-vishal.onrender.com' }}
