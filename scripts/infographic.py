@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 infographic.py — Turn the day's research into a branded hand-drawn-style
-infographic PNG, then host it so Buffer can attach it to the Threads post.
+infographic PNG, then host it so Buffer can attach it to the X.com post.
 
 Pipeline (called from generate_and_schedule.py):
     research brief  ->  content JSON (reuses the Gemini/Euron text chain)

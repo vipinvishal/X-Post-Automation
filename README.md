@@ -29,7 +29,7 @@ Series routing — Mon: How It Actually Works
         ↓
 Exa — neural web research on the selected topic
         ↓
-Gemini — generates post or 6-tweet thread
+Gemini — generates post
   └─ fallback: Gemini key #2 → Groq → Euron API
         ↓
 [Single post] Playwright renders infographic PNG → imgbb hosts it
@@ -37,9 +37,8 @@ Gemini — generates post or 6-tweet thread
 Buffer — schedules and publishes to X (with infographic attached)
 ```
 
-**Post types per run:**
-- **70% — single post** with branded infographic image attached
-- **30% — 6-tweet thread** (text only, explains one concept step by step)
+**Post type per run:**
+- **Single post** with branded infographic image attached (100% of runs)
 
 ---
 

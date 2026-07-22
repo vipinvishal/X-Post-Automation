@@ -34,13 +34,11 @@ BUFFER_API_KEY    = os.environ.get("BUFFER_API_KEY")
 BUFFER_CHANNEL_ID = os.environ.get("BUFFER_CHANNEL_ID")
 
 # ── Infographic image ─────────────────────────────────────────────────────────
-# When on, single posts get a rendered infographic PNG attached via Buffer.
+# When on, every X.com post gets a rendered infographic PNG attached via Buffer.
 # Set INCLUDE_INFOGRAPHIC=0 to fall back to text-only (e.g. if imgbb key is missing).
-# Threads (multi-tweet) are always text-only — images don't attach to threads.
 INCLUDE_INFOGRAPHIC = os.environ.get("INCLUDE_INFOGRAPHIC", "1") not in ("0", "false", "False", "")
 
-# Portfolio URL appended to the last tweet of every thread (not single posts —
-# X suppresses text posts that contain external links in feeds).
+# Portfolio URL appended to every X.com post body (after hashtags).
 PORTFOLIO_URL = os.environ.get("PORTFOLIO_URL", "https://vipin-vishal.onrender.com")
 
 GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
@@ -118,33 +116,6 @@ Write the post using this exact structure (total ≤ 220 chars — compress ruth
 
 Voice: you're the engineer who ran into this, not the expert with the answer.
 "anyone else hit this?" "this one caught me off guard."\
-""",
-]
-
-_STYLE_THREAD_SECTION = [
-    # Style 0 ── Problem → Solution (6 tweets)
-    """\
-━━━ THREAD STYLE 1: Problem → Solution ━━━
-Tweet 1 (HOOK): Open with the problem — something you got confused by or that broke for you. First-person. Max 150 chars. End with "→" or ":"
-  Examples: "got this completely wrong for months. here's what attention actually computes →"
-            "spent hours debugging why my RAG kept failing. the culprit surprised me:"
-Tweet 2: Deepen the problem — why it's trickier than expected, what you tried first, how widespread it is
-Tweet 3: What most people try (and why it doesn't fully solve it) — be honest, not condescending
-Tweet 4: The AI/ML concept as the actual fix. Name it directly. Share the moment it clicked.
-Tweet 5: The key mechanism — the one technical detail that made the concept finally make sense. Precise.
-Tweet 6 (CLOSE): A thought that reframes how the reader sees this + "follow for one AI/ML deep dive per day." Include: {portfolio_url}\
-""",
-    # Style 1 ── Scenario → Risk → Solution (6 tweets)
-    """\
-━━━ THREAD STYLE 2: Scenario → Risk → Solution ━━━
-Tweet 1 (HOOK): An imaginary scenario — someone building with AI runs into something unexpected. Max 150 chars. End with "→" or ":"
-  Examples: "imagine you ship a RAG pipeline. users start getting confidently wrong answers. here's why →"
-            "picture this: your AI agent starts leaking data between user sessions:"
-Tweet 2: Why this matters when you're actually building — the real cost, failure mode, or blast radius
-Tweet 3: The specific security or failure risk (be precise: hallucination, prompt injection, data leakage, latency cliff)
-Tweet 4: The AI/ML concept that addresses it. Name it. Show you're learning it too, not presenting it as settled.
-Tweet 5: How it works — 3 concrete mechanisms (numbered: 1. 2. 3.). Technical, not generic.
-Tweet 6 (CLOSE): "this shifted how I think about [X] because [reason]" + "what's your take? drop it in the comments." Include: {portfolio_url}\
 """,
 ]
 
@@ -238,39 +209,6 @@ Sound like someone figuring this out, not someone who has it all figured out:
 - Plain text only, no markdown
 
 OUTPUT: only the post body. no quotes, no labels, no hashtags.
-""".strip()
-
-
-THREAD_POST_PROMPT = """
-Write a 6-tweet thread from the perspective of an AI/ML engineer actively learning — going deep on one concept, sharing what they discovered, not lecturing from authority.
-
-Topic: {topic}
-Tone: {tone}
-
-Recent AI research and news to draw from (use specific numbers and findings, don't cite sources):
-{research}
-
-{style_section}
-
-━━━ LEARNING-IN-PUBLIC VOICE ━━━
-Right (engineer who's still figuring it out):
-  "went deep on attention today. here's what every tutorial skips:"
-  "I got this wrong for a long time — here's what finally made the KV cache click:"
-  "TIL: each new token only computes its own attention. prior key/values are cached. that's O(n²) → O(n). that's why token 1 is slow and token 100 is fast."
-
-Wrong (senior architect presenting from authority):
-  "our team has implemented this at scale and here is what we learned"
-  "as an experienced engineer, I can tell you definitively that..."
-  "this revolutionary approach changes everything"
-  "your system is broken because..."
-
-━━━ RULES ━━━
-- No "we", "our", "our team", "our company" anywhere in the thread
-- Technically accurate in every tweet — never trade precision for punchiness
-- Tweet 1 max 150 chars, tweets 2-6 max 280 chars each
-- No hashtags, no emojis, plain text only
-
-OUTPUT FORMAT: exactly 6 tweets separated by a line containing only "---". Nothing else.
 """.strip()
 
 
@@ -518,55 +456,6 @@ def generate_post(topic: str, tone: str, research: str, style_index: int = 0) ->
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# STEP 2b — Generate Thread with Gemini
-# ══════════════════════════════════════════════════════════════════════════════
-
-def generate_thread(topic: str, tone: str, research: str, style_index: int = 0) -> list:
-    """Generate a 6-tweet thread. Returns [] on failure (caller falls back to single post)."""
-    print(f"[ Step 2 ] Generating thread with Gemini... (style: {_STYLE_LABELS[style_index]})")
-
-    # Resolve {portfolio_url} inside the style section before inserting into the outer template
-    style_sec = _STYLE_THREAD_SECTION[style_index].format(portfolio_url=PORTFOLIO_URL)
-    prompt = THREAD_POST_PROMPT.format(
-        topic=topic,
-        tone=tone,
-        research=research[:2000],
-        style_section=style_sec,
-    )
-
-    raw = generate_text(prompt, SYSTEM_PROMPT)
-
-    import re as _re
-    tweets = [t.strip() for t in raw.split("---") if t.strip()]
-    tweets = [_re.sub(r'\*{1,3}(.+?)\*{1,3}', r'\1', t) for t in tweets]
-    tweets = [_re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', t).strip() for t in tweets]
-
-    if len(tweets) < 3:
-        print(f"  [Thread] Got {len(tweets)} tweets, expected 6. Falling back to single post.")
-        return []
-
-    tweets = tweets[:6]
-    for i, tweet in enumerate(tweets):
-        if len(tweet) > 280:
-            tweets[i] = tweet[:277] + "..."
-
-    # Append portfolio URL to last tweet if the model didn't include it
-    if tweets and PORTFOLIO_URL:
-        url_suffix = f"\n\n{PORTFOLIO_URL}"
-        if PORTFOLIO_URL not in tweets[-1] and len(tweets[-1]) + len(url_suffix) <= 280:
-            tweets[-1] = tweets[-1] + url_suffix
-
-    print(f"\n  Generated {len(tweets)}-tweet thread:")
-    print(f"  {'─'*50}")
-    for i, tweet in enumerate(tweets, 1):
-        preview = tweet[:100] + ("..." if len(tweet) > 100 else "")
-        print(f"  [{i}] {preview}")
-    print(f"  {'─'*50}\n")
-
-    return tweets
-
-
-# ══════════════════════════════════════════════════════════════════════════════
 # STEP 3 — Schedule to Buffer
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -689,68 +578,8 @@ def schedule_to_buffer(post_text: str, image_url: str = None) -> str:
     raise RuntimeError("Buffer API error: exhausted retry attempts.")
 
 
-def schedule_thread_to_buffer(tweets: list) -> str:
-    """Push a thread to Buffer via GraphQL items input. Falls back to hook-only on API error."""
-    print("[ Step 3 ] Scheduling thread to Buffer...")
-
-    due_at = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
-    items = [{"text": t} for t in tweets]
-
-    mutation = """
-    mutation CreatePost($items: [PostItemInput!]!, $channelId: ChannelId!, $dueAt: DateTime) {
-      createPost(input: {
-        items: $items,
-        channelId: $channelId,
-        schedulingType: automatic,
-        mode: customScheduled,
-        dueAt: $dueAt
-      }) {
-        ... on PostActionSuccess {
-          post { id text }
-        }
-        ... on MutationError {
-          message
-        }
-      }
-    }
-    """
-
-    response = requests.post(
-        "https://api.buffer.com",
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {BUFFER_API_KEY}",
-        },
-        json={
-            "query": mutation,
-            "variables": {"items": items, "channelId": BUFFER_CHANNEL_ID, "dueAt": due_at},
-        },
-        timeout=15,
-    )
-
-    try:
-        data = response.json()
-    except ValueError:
-        print("  [Thread] Buffer returned invalid JSON — falling back to hook tweet only...")
-        return schedule_to_buffer(tweets[0])
-
-    if response.status_code != 200 or "errors" in data:
-        print("  [Thread] Buffer thread API error — falling back to hook tweet only...")
-        return schedule_to_buffer(tweets[0])
-
-    result = data.get("data", {}).get("createPost", {})
-    if "message" in result:
-        print(f"  [Thread] Buffer mutation error: {result['message']} — falling back to hook tweet only...")
-        return schedule_to_buffer(tweets[0])
-
-    post_id = result.get("post", {}).get("id", "unknown")
-    print(f"  Scheduled thread! Buffer Post ID: {post_id}")
-    print(f"  Publish time: {due_at}\n")
-    return post_id
-
-
 # ══════════════════════════════════════════════════════════════════════════════
-# STEP 3.5 — Infographic image (single posts only)
+# STEP 3.5 — Infographic image
 # ══════════════════════════════════════════════════════════════════════════════
 
 def build_infographic_image(research: str, topic: str, preview: bool, style_index: int = 0):
@@ -790,15 +619,11 @@ def main(preview: bool = False):
 
     tone        = random.choice(TONES)
     style_index = _pick_style_index()
-    is_thread   = random.random() < 0.30  # 30% chance of thread
-
-    post_type = "THREAD (6 tweets)" if is_thread else "SINGLE POST"
 
     print(f"\n{'='*60}")
-    print(f"  X Post Agent — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
+    print(f"  X.com Post Agent — {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}")
     if preview:
         print(f"  MODE: PREVIEW (no Buffer scheduling)")
-    print(f"  Type   : {post_type}")
     print(f"{'='*60}")
     print(f"  Niche  : {NICHE}")
     if series_name:
@@ -810,27 +635,14 @@ def main(preview: bool = False):
 
     try:
         research = research_topic(topic, NICHE)
-
-        if is_thread:
-            tweets = generate_thread(topic, tone, research, style_index)
-            if not tweets:
-                # Thread generation failed — fall through to single post
-                is_thread = False
-
-        if not is_thread:
-            post = generate_post(topic, tone, research, style_index)
+        post     = generate_post(topic, tone, research, style_index)
 
         if preview:
-            if is_thread:
-                print(f"  PREVIEW — Thread ({len(tweets)} tweets):")
-                for i, t in enumerate(tweets, 1):
-                    print(f"  [{i}] {t}\n")
-            else:
-                image_ref = None
-                if INCLUDE_INFOGRAPHIC:
-                    image_ref = build_infographic_image(research, topic, preview=True, style_index=style_index)
-                if image_ref:
-                    print(f"  Infographic saved at: {image_ref}")
+            image_ref = None
+            if INCLUDE_INFOGRAPHIC:
+                image_ref = build_infographic_image(research, topic, preview=True, style_index=style_index)
+            if image_ref:
+                print(f"  Infographic saved at: {image_ref}")
             print(f"{'='*60}")
             print(f"  PREVIEW ONLY — post NOT sent to Buffer.")
             print(f"  Run without --preview to schedule it.")
@@ -838,17 +650,13 @@ def main(preview: bool = False):
             return
 
         image_ref = None
-        if not is_thread and INCLUDE_INFOGRAPHIC:
+        if INCLUDE_INFOGRAPHIC:
             image_ref = build_infographic_image(research, topic, preview=False, style_index=style_index)
 
-        if is_thread:
-            post_id = schedule_thread_to_buffer(tweets)
-        else:
-            post_id = schedule_to_buffer(post, image_ref)
+        post_id = schedule_to_buffer(post, image_ref)
 
-        label = "Thread" if is_thread else "Post"
         print(f"{'='*60}")
-        print(f"  Done! {label} queued in Buffer → will publish to X")
+        print(f"  Done! Post queued in Buffer → will publish to X.com")
         print(f"  Buffer ID : {post_id}")
         print(f"{'='*60}\n")
 
