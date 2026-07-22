@@ -57,8 +57,11 @@ SOURCES / CONTEXT:
 ---
 
 TASK
-Reframe this into ONE evergreen, teachable AI concept that fits a 3-stage
-"how it works" infographic. Prefer the underlying mechanism over the news headline
+Reframe this into ONE evergreen, teachable AI concept that fits a 3-stage infographic.
+Preferred 3-stage framing for this post: {style_framing}
+Use that framing to decide what the 3 stages represent (e.g. "Problem → Root Cause → Solution Mechanism"
+means stage 1 = the problem state, stage 2 = why it happens, stage 3 = how the concept fixes it).
+Prefer the underlying mechanism over the news headline
 (e.g. a story about a new agent framework -> "How an AI Agent Decides Its Next Action").
 
 HARD RULES
@@ -150,16 +153,19 @@ def _coerce(data: dict) -> dict:
     return data
 
 
-def generate_infographic_content(research: str, topic: str, generate_text_fn) -> dict:
+def generate_infographic_content(research: str, topic: str, generate_text_fn,
+                                  style_framing: str = "Problem → Root Cause → Solution Mechanism") -> dict:
     """Build validated infographic content JSON, reusing the text-gen chain.
 
     generate_text_fn(prompt, system) -> str   (the Gemini/Euron chain from main)
+    style_framing: hint that aligns the 3 stages with the current post style.
     """
     prompt = _USER_TEMPLATE.format(
         topic=topic,
         research=(research or "").strip()[:5500] or topic,
         icons=", ".join(ICON_NAMES),
         handle=INFOGRAPHIC_HANDLE,
+        style_framing=style_framing,
     )
     last_err = ""
     for attempt in range(1, 3):  # one retry

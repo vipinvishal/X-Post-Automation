@@ -58,7 +58,6 @@ PERSONA       = _config["persona"]
 TOPICS        = _config["topics"]
 SERIES_TOPICS = _config.get("series_topics", {})
 TONES         = _config["tones"]
-FORMATS       = _config["formats"]
 
 # Day-of-week series routing (0=Mon, 2=Wed, 4=Fri)
 _SERIES_DAY_MAP = {
@@ -84,6 +83,83 @@ _HASHTAG_RULES = [
     (("context", "tokeniz", "token", "prompt", "temperature"),         "#LLM #MachineLearning"),
 ]
 _DEFAULT_HASHTAGS = "#AI #MachineLearning"
+
+# ── Content styles ─────────────────────────────────────────────────────────────
+# Two post structures that alternate each run (9AM / 1PM / 7PM IST).
+# Style 0: Problem → Solution   |   Style 1: Scenario → Risk → Solution
+# The same style index is passed to the infographic so image and text are aligned.
+
+_STYLE_LABELS = ["Problem → Solution", "Scenario → Risk → Solution"]
+
+_STYLE_SINGLE_SECTION = [
+    # Style 0 ── Problem → Solution
+    """\
+━━━ CONTENT STYLE 1: Problem → Solution ━━━
+Write the post using this exact structure (total ≤ 220 chars — compress ruthlessly):
+1. Open with the problem — something that confused you or tripped you up in AI/ML
+2. Deepen it — why it's sneakier or more common than you'd expect
+3. Walk through what you tried or what most people try (briefly)
+4. The AI/ML concept as what actually works + the one mechanism that made it click for you
+5. Close with a thought that reframes the reader's mental model from your learning
+6. End with: "follow for one AI/ML deep dive per day"
+
+Voice: you're sharing what you figured out, not teaching from authority.
+"I got this wrong for a while." "here's what finally made it click." "TIL that..."\
+""",
+    # Style 1 ── Scenario → Risk → Solution
+    """\
+━━━ CONTENT STYLE 2: Scenario → Risk → Solution ━━━
+Write the post using this exact structure (total ≤ 220 chars — compress ruthlessly):
+1. Open with a vivid imaginary scenario — someone building an AI system hits a wall
+2. Show what's at stake when you're actually shipping: what breaks, what the cost is
+3. The security or failure risk this exposes (hallucination in prod, prompt injection, data leakage, cost blowup)
+4. The AI/ML concept that addresses it + one concrete thing it does differently
+5. Close with a question to spark discussion — "what's your experience with this?" or similar
+
+Voice: you're the engineer who ran into this, not the expert with the answer.
+"anyone else hit this?" "this one caught me off guard."\
+""",
+]
+
+_STYLE_THREAD_SECTION = [
+    # Style 0 ── Problem → Solution (6 tweets)
+    """\
+━━━ THREAD STYLE 1: Problem → Solution ━━━
+Tweet 1 (HOOK): Open with the problem — something you got confused by or that broke for you. First-person. Max 150 chars. End with "→" or ":"
+  Examples: "got this completely wrong for months. here's what attention actually computes →"
+            "spent hours debugging why my RAG kept failing. the culprit surprised me:"
+Tweet 2: Deepen the problem — why it's trickier than expected, what you tried first, how widespread it is
+Tweet 3: What most people try (and why it doesn't fully solve it) — be honest, not condescending
+Tweet 4: The AI/ML concept as the actual fix. Name it directly. Share the moment it clicked.
+Tweet 5: The key mechanism — the one technical detail that made the concept finally make sense. Precise.
+Tweet 6 (CLOSE): A thought that reframes how the reader sees this + "follow for one AI/ML deep dive per day." Include: {portfolio_url}\
+""",
+    # Style 1 ── Scenario → Risk → Solution (6 tweets)
+    """\
+━━━ THREAD STYLE 2: Scenario → Risk → Solution ━━━
+Tweet 1 (HOOK): An imaginary scenario — someone building with AI runs into something unexpected. Max 150 chars. End with "→" or ":"
+  Examples: "imagine you ship a RAG pipeline. users start getting confidently wrong answers. here's why →"
+            "picture this: your AI agent starts leaking data between user sessions:"
+Tweet 2: Why this matters when you're actually building — the real cost, failure mode, or blast radius
+Tweet 3: The specific security or failure risk (be precise: hallucination, prompt injection, data leakage, latency cliff)
+Tweet 4: The AI/ML concept that addresses it. Name it. Show you're learning it too, not presenting it as settled.
+Tweet 5: How it works — 3 concrete mechanisms (numbered: 1. 2. 3.). Technical, not generic.
+Tweet 6 (CLOSE): "this shifted how I think about [X] because [reason]" + "what's your take? drop it in the comments." Include: {portfolio_url}\
+""",
+]
+
+_STYLE_INFOGRAPHIC_FRAMING = [
+    "Problem → Root Cause → Solution Mechanism",  # Style 0
+    "The Scenario → The Risk → The Fix",          # Style 1
+]
+
+
+def _pick_style_index() -> int:
+    """Alternate style 0 / style 1 on every run (3 runs/day).
+    Formula: (day_of_year × 3 + time_slot) % 2 → clean 0,1,0,1 alternation."""
+    now  = datetime.now(timezone.utc)
+    slot = 0 if now.hour < 6 else (1 if now.hour < 11 else 2)
+    return (now.timetuple().tm_yday * 3 + slot) % 2
 
 
 def _pick_hashtags(post_text: str, topic: str) -> str:
@@ -126,51 +202,39 @@ Rules:
 """.strip()
 
 VIRAL_POST_PROMPT = """
-Write one X post from the perspective of an AI/ML engineer sharing what they just learned or studied — explaining one concept with real technical depth.
+Write one X post from the perspective of an AI/ML engineer actively learning — sharing something they just figured out, not presenting from authority.
 
 Topic: {topic}
 Tone: {tone}
-Style: {format_style}
 
 Recent AI research and news to draw from (use specific numbers, mechanisms, findings — don't cite the source):
 {research}
 
 ━━━ THE CORE TASK ━━━
-Teach one specific, technically accurate thing about this topic that makes the reader go "oh, THAT'S how it actually works."
+Share one technically accurate insight that sounds like an engineer mid-discovery, not a textbook.
 
-Wrong (too vague):
-  "transformers use attention to understand context"
-  "RAG helps models access external knowledge"
+Wrong (expert presenting facts — avoid this):
+  "transformers leverage attention mechanisms to understand contextual relationships"
+  "RAG significantly improves LLM accuracy by grounding responses in retrieved data"
 
-Right (mechanism-level):
-  "attention computes a weighted sum of value vectors. the weights come from dot-product similarity between each token's query and every other token's key. that's the whole operation."
-  "chunk size matters more than embedding model in RAG. a relevant sentence buried in a 600-token chunk gets averaged into the embedding and loses its signal. retrieval fails before the model even sees it."
+Right (engineer who just figured something out):
+  "spent time on why LLMs fail at math. they don't see numbers — they see tokens. '1234' can split into '12' and '34'. it was never doing arithmetic. it was pattern-matching over fragments."
+  "TIL the KV cache is why token 1 takes 200ms and token 500 takes 20ms. each new token only computes its own attention — prior key/values are cached. O(n²) → O(n). that's it."
 
-Use the research to ground the explanation in something real — a specific number, a recent paper finding, or a concrete model behavior.
+Use the research to ground the insight in something concrete — a specific number, a paper finding, a real failure mode.
 
-━━━ VOICE ━━━
-This is a learning share, not consulting advice. Write as someone explaining what they studied, not advising someone on their broken system.
+━━━ LEARNING-IN-PUBLIC VOICE ━━━
+Sound like someone figuring this out, not someone who has it all figured out:
+  "I got this wrong for a long time." / "here's what finally made it click." / "TIL that..."
+  NOT: "here's the definitive breakdown" / "you need to understand" / "this is how experts do it"
 
-Right tone:
-  "spent time understanding the KV cache today. the insight: without it, generating token 500 means recomputing attention for all 499 previous tokens every single step."
-  "TIL that fine-tuning doesn't teach new facts. it shifts the output distribution toward a style. new knowledge needs RAG, not training."
-
-Wrong tone:
-  "your RAG is broken because..." (advisory/consulting)
-  "as a founder, I've seen..." (company vibe)
-  "we implemented this at..." (team/company)
-
-━━━ FOLLOW MICRO-HOOK (when it fits naturally) ━━━
-One short line at the end — pick whichever fits, skip if nothing does naturally:
-  - Next step hint: "going into the math next" / "part 2 on friday" / "next: why this breaks at long context"
-  - Portfolio callout: "building a full AI explainer library — link in bio"
-Never force it. If the post is complete on its own, end there.
+{style_section}
 
 ━━━ HARD RULES ━━━
-- Max 245 characters (hashtags get added after — don't include them)
+- Max 220 characters (hashtags + URL get added after — don't include them)
 - No emojis
 - No "we", "our", "our team", "our company"
-- No hype words: game-changing, revolutionary, groundbreaking
+- No hype words: game-changing, revolutionary, groundbreaking, paradigm, leverage, delve
 - Plain text only, no markdown
 
 OUTPUT: only the post body. no quotes, no labels, no hashtags.
@@ -178,7 +242,7 @@ OUTPUT: only the post body. no quotes, no labels, no hashtags.
 
 
 THREAD_POST_PROMPT = """
-Write a 6-tweet thread from the perspective of an AI/ML engineer doing a deep dive on one concept — explaining how it actually works, step by step, with real technical depth.
+Write a 6-tweet thread from the perspective of an AI/ML engineer actively learning — going deep on one concept, sharing what they discovered, not lecturing from authority.
 
 Topic: {topic}
 Tone: {tone}
@@ -186,32 +250,23 @@ Tone: {tone}
 Recent AI research and news to draw from (use specific numbers and findings, don't cite sources):
 {research}
 
-━━━ THREAD STRUCTURE ━━━
-Tweet 1 (HOOK): The surprising truth or the thing most people get wrong about this topic. First-person learning angle. Max 150 chars. End with "→" or ":"
-  Examples: "most explanations of attention are wrong. here's what it actually computes →"
-            "TIL why LLMs can't do math. the reason is weirder than you'd think:"
-Tweet 2-4 (MECHANISM): The actual explanation, one concrete step per tweet. Numbered 2/, 3/, 4/. Technically precise. Each tweet stands alone.
-Tweet 5 (THE INSIGHT): What this understanding actually changes — the mental model shift or the practical implication for anyone building with AI.
-Tweet 6 (CTA): Invite follow + mention portfolio. Embed the URL naturally in a sentence.
-  URL to include: {portfolio_url}
-  Examples:
-    "documenting these deep dives at {portfolio_url} — one AI/ML concept a day, properly explained. follow to keep up."
-    "i go through one AI/ML concept per day and build explainers at {portfolio_url}. follow if you want the real thing."
+{style_section}
 
-━━━ VOICE ━━━
-Right (engineer learning in public):
-  "went deep on attention today. here's what every tutorial glosses over:"
-  "TIL: the KV cache stores key/value vectors for all prior tokens so each new token only computes its own attention. that's how O(n²) becomes O(n)."
+━━━ LEARNING-IN-PUBLIC VOICE ━━━
+Right (engineer who's still figuring it out):
+  "went deep on attention today. here's what every tutorial skips:"
+  "I got this wrong for a long time — here's what finally made the KV cache click:"
+  "TIL: each new token only computes its own attention. prior key/values are cached. that's O(n²) → O(n). that's why token 1 is slow and token 100 is fast."
 
-Wrong (company/advisor tone):
-  "our team implemented this at scale"
-  "as a founder, I've seen this pattern repeatedly"
+Wrong (senior architect presenting from authority):
+  "our team has implemented this at scale and here is what we learned"
+  "as an experienced engineer, I can tell you definitively that..."
+  "this revolutionary approach changes everything"
   "your system is broken because..."
-  "this revolutionary approach..."
 
 ━━━ RULES ━━━
 - No "we", "our", "our team", "our company" anywhere in the thread
-- Technically accurate in every tweet
+- Technically accurate in every tweet — never trade precision for punchiness
 - Tweet 1 max 150 chars, tweets 2-6 max 280 chars each
 - No hashtags, no emojis, plain text only
 
@@ -395,17 +450,15 @@ def research_topic(topic: str, niche: str) -> str:
 # STEP 2 — Generate Viral Post with Gemini
 # ══════════════════════════════════════════════════════════════════════════════
 
-def generate_post(topic: str, tone: str, format_style: str, niche: str, persona: str, research: str) -> str:
+def generate_post(topic: str, tone: str, research: str, style_index: int = 0) -> str:
     """Call Gemini with the viral post prompt + research brief."""
-    print("[ Step 2 ] Generating post with Gemini...")
+    print(f"[ Step 2 ] Generating post with Gemini... (style: {_STYLE_LABELS[style_index]})")
 
     prompt = VIRAL_POST_PROMPT.format(
-        niche=niche,
-        persona=persona,
         topic=topic,
         tone=tone,
-        format_style=format_style,
         research=research[:2000],
+        style_section=_STYLE_SINGLE_SECTION[style_index],
     )
 
     post = generate_text(prompt, SYSTEM_PROMPT)
@@ -468,15 +521,17 @@ def generate_post(topic: str, tone: str, format_style: str, niche: str, persona:
 # STEP 2b — Generate Thread with Gemini
 # ══════════════════════════════════════════════════════════════════════════════
 
-def generate_thread(topic: str, tone: str, research: str) -> list:
+def generate_thread(topic: str, tone: str, research: str, style_index: int = 0) -> list:
     """Generate a 6-tweet thread. Returns [] on failure (caller falls back to single post)."""
-    print("[ Step 2 ] Generating thread with Gemini...")
+    print(f"[ Step 2 ] Generating thread with Gemini... (style: {_STYLE_LABELS[style_index]})")
 
+    # Resolve {portfolio_url} inside the style section before inserting into the outer template
+    style_sec = _STYLE_THREAD_SECTION[style_index].format(portfolio_url=PORTFOLIO_URL)
     prompt = THREAD_POST_PROMPT.format(
         topic=topic,
         tone=tone,
         research=research[:2000],
-        portfolio_url=PORTFOLIO_URL,
+        style_section=style_sec,
     )
 
     raw = generate_text(prompt, SYSTEM_PROMPT)
@@ -698,7 +753,7 @@ def schedule_thread_to_buffer(tweets: list) -> str:
 # STEP 3.5 — Infographic image (single posts only)
 # ══════════════════════════════════════════════════════════════════════════════
 
-def build_infographic_image(research: str, topic: str, preview: bool):
+def build_infographic_image(research: str, topic: str, preview: bool, style_index: int = 0):
     """Render the infographic and (unless preview) host it for Buffer.
 
     Returns a public image URL (real run), a local PNG path (preview), or None
@@ -706,7 +761,8 @@ def build_infographic_image(research: str, topic: str, preview: bool):
     """
     try:
         print("\n[ Step 3.5 ] Building infographic image...")
-        content  = infographic.generate_infographic_content(research, topic, generate_text)
+        framing  = _STYLE_INFOGRAPHIC_FRAMING[style_index]
+        content  = infographic.generate_infographic_content(research, topic, generate_text, framing)
         out_dir  = os.path.join(_script_dir, "..", "output")
         os.makedirs(out_dir, exist_ok=True)
         png_path = os.path.abspath(os.path.join(out_dir, "infographic.png"))
@@ -732,9 +788,9 @@ def main(preview: bool = False):
     else:
         topic = random.choice(TOPICS)
 
-    tone         = random.choice(TONES)
-    format_style = random.choice(FORMATS)
-    is_thread    = random.random() < 0.30  # 30% chance of thread
+    tone        = random.choice(TONES)
+    style_index = _pick_style_index()
+    is_thread   = random.random() < 0.30  # 30% chance of thread
 
     post_type = "THREAD (6 tweets)" if is_thread else "SINGLE POST"
 
@@ -749,21 +805,20 @@ def main(preview: bool = False):
         print(f"  Series : {series_name}")
     print(f"  Topic  : {topic}")
     print(f"  Tone   : {tone}")
-    if not is_thread:
-        print(f"  Format : {format_style[:60]}...")
+    print(f"  Style  : Style {style_index + 1} — {_STYLE_LABELS[style_index]}")
     print(f"{'='*60}\n")
 
     try:
         research = research_topic(topic, NICHE)
 
         if is_thread:
-            tweets = generate_thread(topic, tone, research)
+            tweets = generate_thread(topic, tone, research, style_index)
             if not tweets:
                 # Thread generation failed — fall through to single post
                 is_thread = False
 
         if not is_thread:
-            post = generate_post(topic, tone, format_style, NICHE, PERSONA, research)
+            post = generate_post(topic, tone, research, style_index)
 
         if preview:
             if is_thread:
@@ -773,7 +828,7 @@ def main(preview: bool = False):
             else:
                 image_ref = None
                 if INCLUDE_INFOGRAPHIC:
-                    image_ref = build_infographic_image(research, topic, preview=True)
+                    image_ref = build_infographic_image(research, topic, preview=True, style_index=style_index)
                 if image_ref:
                     print(f"  Infographic saved at: {image_ref}")
             print(f"{'='*60}")
@@ -784,7 +839,7 @@ def main(preview: bool = False):
 
         image_ref = None
         if not is_thread and INCLUDE_INFOGRAPHIC:
-            image_ref = build_infographic_image(research, topic, preview=False)
+            image_ref = build_infographic_image(research, topic, preview=False, style_index=style_index)
 
         if is_thread:
             post_id = schedule_thread_to_buffer(tweets)
