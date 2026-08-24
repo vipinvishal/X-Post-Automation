@@ -41,8 +41,8 @@ INCLUDE_INFOGRAPHIC = os.environ.get("INCLUDE_INFOGRAPHIC", "1") not in ("0", "f
 # Portfolio URL appended to every X.com post body (after hashtags).
 PORTFOLIO_URL = os.environ.get("PORTFOLIO_URL", "https://vipin-vishal.onrender.com")
 
-GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
-GEMINI_FALLBACK_MODELS = ["gemini-2.0-flash", "gemini-2.0-flash-001"]
+GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
+GEMINI_FALLBACK_MODELS = ["gemini-flash-latest", "gemini-3.6-flash", "gemini-2.5-flash"]
 MAX_RETRIES            = 4
 RETRY_BASE_SECONDS     = 15
 
@@ -236,6 +236,11 @@ def _is_daily_quota_exhausted(error: Exception) -> bool:
     return "PerDay" in s or "GenerateRequestsPerDay" in s or ("limit: 0" in s and "429" in s)
 
 
+def _is_model_not_found(error: Exception) -> bool:
+    s = str(error)
+    return "404" in s or "NOT_FOUND" in s
+
+
 def _call_groq(prompt: str, system_instruction: str) -> str:
     if not GROQ_API_KEY:
         raise RuntimeError("GROQ_API_KEY not set.")
@@ -308,6 +313,10 @@ def generate_text(prompt: str, system_instruction: str) -> str:
                     print(f"  [Gemini] Success with {model_id} on {key_label}")
                     return response.text.strip()
                 except Exception as e:
+                    if _is_model_not_found(e):
+                        last_error = e
+                        print(f"  [Gemini] {model_id} not found/retired on {key_label}. Trying next model.")
+                        break
                     if _is_quota_error(e) or _is_retryable_server_error(e):
                         last_error = e
                         if _is_daily_quota_exhausted(e):
