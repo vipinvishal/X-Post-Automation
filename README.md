@@ -32,13 +32,14 @@ Exa — neural web research on the selected topic
 Gemini — generates post
   └─ fallback: Gemini key #2 → Groq → Euron API
         ↓
-[Single post] Playwright renders infographic PNG → imgbb hosts it
+Playwright renders infographic PNG → imgbb hosts it
         ↓
 Buffer — schedules and publishes to X (with infographic attached)
 ```
 
 **Post type per run:**
-- **Single post** with branded infographic image attached (100% of runs)
+- **Single post** with one branded infographic image attached
+- A posting-cadence guard blocks a run if it would exceed `MAX_POSTS_PER_DAY` or fire too soon after the last post (see below)
 
 ---
 
@@ -54,6 +55,19 @@ Buffer — schedules and publishes to X (with infographic attached)
 
 ---
 
+## Posting Cadence Guard
+
+`scripts/post_log.json` records the UTC timestamp of every successful post (pruned to the last 48h) and is committed back to the repo by CI after each run. Before doing any research/generation work, the pipeline checks it against two thresholds and skips gracefully (exit code 0, workflow not marked failed) if either trips:
+
+| Env var | Default | Guards against |
+|---|---|---|
+| `MAX_POSTS_PER_DAY` | `3` | More than N posts landing in the same UTC day |
+| `MIN_POST_SPACING_HOURS` | `3.5` | A manual `workflow_dispatch` firing too soon after the last real post |
+
+The cron itself already runs exactly 3x/day spaced 4h/6h apart — this guard exists for the case where a manual trigger stacks an extra post on top of the schedule.
+
+---
+
 ## Content Series
 
 On Mon / Wed / Fri, the agent picks from a named series instead of a random topic:
@@ -63,22 +77,6 @@ On Mon / Wed / Fri, the agent picks from a named series instead of a random topi
 | Monday | **How It Actually Works** | One AI concept explained from first principles (attention, KV cache, tokenization, RLHF…) |
 | Wednesday | **AI Stack Explained** | System design and architecture (RAG pipeline, inference stack, agent loop, vector search…) |
 | Friday | **AI Research Decoded** | Recent papers and findings decoded in plain technical English |
-
----
-
-## Hashtag System
-
-Two relevant hashtags are automatically selected per post based on content and appended after the body. Examples:
-
-| Content matches | Tags added |
-|---|---|
-| attention, transformer, self-attention | `#Transformers #MachineLearning` |
-| RAG, retrieval, vector, embedding | `#RAG #LLM` |
-| agent, tool call, function call | `#AgenticAI #LLM` |
-| fine-tuning, RLHF, DPO, LoRA | `#LLMTraining #MachineLearning` |
-| KV cache, quantization, inference | `#LLMOps #MachineLearning` |
-| diffusion, image generation | `#GenerativeAI #MachineLearning` |
-| default | `#AI #MachineLearning` |
 
 ---
 
@@ -163,7 +161,9 @@ python scripts/generate_and_schedule.py
 |---|---|---|
 | `INCLUDE_INFOGRAPHIC` | `1` | Set to `0` to disable infographic generation entirely |
 | `INFOGRAPHIC_HANDLE` | `@VipinAILabs` | Handle shown on infographic |
-| `GEMINI_MODEL` | `gemini-2.0-flash` | Primary Gemini model |
+| `MAX_POSTS_PER_DAY` | `3` | Posting cadence guard — max posts per UTC day |
+| `MIN_POST_SPACING_HOURS` | `3.5` | Posting cadence guard — min hours between posts |
+| `GEMINI_MODEL` | `gemini-flash-latest` | Primary Gemini model |
 
 ### Finding your Buffer Channel ID
 
@@ -184,7 +184,7 @@ Go to **Settings → Secrets and variables → Actions** and add:
 
 **Secrets:** `GEMINI_API_KEY`, `GEMINI_API_KEY_2`, `GROQ_API_KEY`, `EURON_API_KEY`, `EXA_API_KEY`, `BUFFER_API_KEY`, `BUFFER_CHANNEL_ID`, `IMGBB_API_KEY`
 
-**Variables:** `INFOGRAPHIC_HANDLE` (e.g. `@VipinAILabs`)
+**Variables:** `INFOGRAPHIC_HANDLE` (e.g. `@VipinAILabs`), `MAX_POSTS_PER_DAY`, `MIN_POST_SPACING_HOURS`
 
 ### 2. The workflow runs automatically
 
@@ -218,6 +218,7 @@ To change the series schedule, edit `_SERIES_DAY_MAP` in `scripts/generate_and_s
 │   ├── generate_and_schedule.py   # main pipeline
 │   ├── topics.json                # niche, topics, series, tones, formats
 │   ├── infographic.py             # infographic content gen + imgbb upload
+│   ├── post_log.json              # posting-cadence guard state, committed by CI
 │   └── get_buffer_channel.py      # one-time helper to find Buffer channel ID
 ├── renderer/
 │   ├── render.py                  # Playwright HTML → PNG renderer

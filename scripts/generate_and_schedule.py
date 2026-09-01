@@ -38,16 +38,22 @@ BUFFER_CHANNEL_ID = os.environ.get("BUFFER_CHANNEL_ID")
 # Set INCLUDE_INFOGRAPHIC=0 to fall back to text-only (e.g. if imgbb key is missing).
 INCLUDE_INFOGRAPHIC = os.environ.get("INCLUDE_INFOGRAPHIC", "1") not in ("0", "false", "False", "")
 
-# Portfolio URL appended to every X.com post body (after hashtags).
-PORTFOLIO_URL = os.environ.get("PORTFOLIO_URL", "https://vipin-vishal.onrender.com")
-
 GEMINI_MODEL           = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
 GEMINI_FALLBACK_MODELS = ["gemini-flash-latest", "gemini-3.6-flash", "gemini-2.5-flash"]
 MAX_RETRIES            = 4
 RETRY_BASE_SECONDS     = 15
 
+# ── Posting cadence guard ─────────────────────────────────────────────────────
+# The cron already runs 3x/day spaced 4h/6h apart. This guards against a manual
+# workflow_dispatch stacking an extra post on top of that schedule.
+MAX_POSTS_PER_DAY      = int(os.environ.get("MAX_POSTS_PER_DAY", "3"))
+MIN_POST_SPACING_HOURS = float(os.environ.get("MIN_POST_SPACING_HOURS", "3.5"))
+_POST_LOG_RETENTION_HOURS = 48
+
 # ── Load topics config ────────────────────────────────────────────────────────
 _script_dir = os.path.dirname(os.path.abspath(__file__))
+_POST_LOG_PATH = os.path.join(_script_dir, "post_log.json")
+
 with open(os.path.join(_script_dir, "topics.json"), "r") as f:
     _config = json.load(f)
 
@@ -64,23 +70,12 @@ _SERIES_DAY_MAP = {
     4: "Build and Learn",
 }
 
-# ── Hashtag selection ─────────────────────────────────────────────────────────
-# X's character limit is 280. X counts any URL as exactly 23 chars (t.co).
-# Budget: 280 - 25 (URL + \n\n) - 32 (hashtags + \n\n) = 223 → use 220 with margin.
-_BODY_CHAR_LIMIT  = 220
-_URL_TCOLEN       = 23   # X wraps all URLs to t.co links, always 23 chars
-
-_HASHTAG_RULES = [
-    (("transformer", "attention", "self-attention", "multi-head"),     "#Transformers #MachineLearning"),
-    (("rag", "retrieval", "vector", "embedding", "chunk", "semantic"), "#RAG #LLM"),
-    (("agent", "agentic", "tool call", "function call", "autonomous"), "#AgenticAI #LLM"),
-    (("fine-tun", "finetun", "rlhf", "dpo", "lora", "train"),         "#LLMTraining #MachineLearning"),
-    (("diffusion", "image generation", "denoising"),                   "#GenerativeAI #MachineLearning"),
-    (("kv cache", "speculative", "quantiz", "inference", "latency"),   "#LLMOps #MachineLearning"),
-    (("moe", "mixture of experts", "architecture", "layer"),           "#DeepLearning #MachineLearning"),
-    (("context", "tokeniz", "token", "prompt", "temperature"),         "#LLM #MachineLearning"),
-]
-_DEFAULT_HASHTAGS = "#AI #MachineLearning"
+# ── Post body budget ───────────────────────────────────────────────────────────
+# X's hard cap is 280 chars. No hashtags or links are appended anymore — both
+# were suppressing organic reach. Target 260 to leave a 20-char safety margin
+# under the cap for the shorten-retry pass below. Keep this "260" in sync with
+# the literal "260" figures in VIRAL_POST_PROMPT and _STYLE_SINGLE_SECTION.
+_BODY_CHAR_LIMIT = 260
 
 # ── Content styles ─────────────────────────────────────────────────────────────
 # Two post structures that alternate each run (9AM / 1PM / 7PM IST).
@@ -89,25 +84,45 @@ _DEFAULT_HASHTAGS = "#AI #MachineLearning"
 
 _STYLE_LABELS = ["Problem → Solution", "Scenario → Risk → Solution"]
 
+# Shared closer guidance appended to both style prompts below. Gives the model
+# varied *example* patterns to draw inspiration from (never copy verbatim) so
+# posts stop ending on an identical boilerplate CTA line.
+_CLOSER_EXAMPLES = """\
+━━━ CLOSER PATTERNS (draw inspiration from these — never copy verbatim) ━━━
+Vary the *kind* of closer across posts. Don't default to a question every time:
+- "still catches me off guard, honestly." (plain admission, no question)
+- "not sure this generalizes past transformers, but it's held up everywhere I've tried it." (opinion/prediction)
+- "TIL. wish someone had told me this before I burned a day on it." (TIL, no question)
+- "curious if this holds for anyone running this on-prem, or if it's a cloud-inference-only quirk." (genuine question)
+- "noting this for future me: check the tokenizer before blaming the model." (note to future self)
+- "this is the kind of bug that looks like a model problem for two days before you find out it's a data problem." (opinion, no question)
+- "not sure if this is common knowledge or just something I hadn't run into — anyone else hit this?" (genuine question)
+- "if I'd known this on day one it would've saved me a week of debugging." (opinion/prediction)
+- "small mechanism, big consequences. that's most of ML." (no closer — ends on the insight)
+- "what's the equivalent gotcha in your stack?" (genuine question)"""
+
 _STYLE_SINGLE_SECTION = [
     # Style 0 ── Problem → Solution
     """\
 ━━━ CONTENT STYLE 1: Problem → Solution ━━━
-Write the post using this exact structure (total ≤ 220 chars — compress ruthlessly):
+Write the post using this exact structure (total ≤ 260 chars — compress ruthlessly):
 1. Open with the problem — something that confused you or tripped you up in AI/ML
 2. Deepen it — why it's sneakier or more common than you'd expect
 3. Walk through what you tried or what most people try (briefly)
 4. The AI/ML concept as what actually works + the one mechanism that made it click for you
-5. Close with a thought that reframes the reader's mental model from your learning
-6. End with: "follow for one AI/ML deep dive per day"
+5. Close with something content-specific and genuine — a real question, a specific opinion or
+   prediction, a "noting this for future me" realization, or nothing extra if the insight already
+   lands on its own. Never a generic call-to-action.
 
 Voice: you're sharing what you figured out, not teaching from authority.
-"I got this wrong for a while." "here's what finally made it click." "TIL that..."\
-""",
+"I got this wrong for a while." "here's what finally made it click." "TIL that..."
+
+"""
+    + _CLOSER_EXAMPLES,
     # Style 1 ── Scenario → Risk → Solution
     """\
 ━━━ CONTENT STYLE 2: Scenario → Risk → Solution ━━━
-Write the post using this exact structure (total ≤ 220 chars — compress ruthlessly):
+Write the post using this exact structure (total ≤ 260 chars — compress ruthlessly):
 1. Open with a vivid imaginary scenario — someone building an AI system hits a wall
 2. Show what's at stake when you're actually shipping: what breaks, what the cost is
 3. The security or failure risk this exposes (hallucination in prod, prompt injection, data leakage, cost blowup)
@@ -115,8 +130,10 @@ Write the post using this exact structure (total ≤ 220 chars — compress ruth
 5. Close with a question to spark discussion — "what's your experience with this?" or similar
 
 Voice: you're the engineer who ran into this, not the expert with the answer.
-"anyone else hit this?" "this one caught me off guard."\
-""",
+"anyone else hit this?" "this one caught me off guard."
+
+"""
+    + _CLOSER_EXAMPLES,
 ]
 
 _STYLE_INFOGRAPHIC_FRAMING = [
@@ -131,14 +148,6 @@ def _pick_style_index() -> int:
     now  = datetime.now(timezone.utc)
     slot = 0 if now.hour < 6 else (1 if now.hour < 11 else 2)
     return (now.timetuple().tm_yday * 3 + slot) % 2
-
-
-def _pick_hashtags(post_text: str, topic: str) -> str:
-    combined = (post_text + " " + topic).lower()
-    for keywords, tags in _HASHTAG_RULES:
-        if any(k in combined for k in keywords):
-            return tags
-    return _DEFAULT_HASHTAGS
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -202,13 +211,13 @@ Sound like someone figuring this out, not someone who has it all figured out:
 {style_section}
 
 ━━━ HARD RULES ━━━
-- Max 220 characters (hashtags + URL get added after — don't include them)
+- Max 260 characters — this is the entire post, nothing gets appended after it (no hashtags, no links)
 - No emojis
 - No "we", "our", "our team", "our company"
 - No hype words: game-changing, revolutionary, groundbreaking, paradigm, leverage, delve
 - Plain text only, no markdown
 
-OUTPUT: only the post body. no quotes, no labels, no hashtags.
+OUTPUT: only the post body. no quotes, no labels, no hashtags, no links.
 """.strip()
 
 
@@ -354,6 +363,61 @@ def generate_text(prompt: str, system_instruction: str) -> str:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# STEP 0 — Posting cadence guard
+# ══════════════════════════════════════════════════════════════════════════════
+
+class PostingCadenceGuardError(Exception):
+    """Raised when posting now would violate the configured cadence limits."""
+
+
+def _load_post_log() -> list:
+    try:
+        with open(_POST_LOG_PATH, "r") as f:
+            raw = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=_POST_LOG_RETENTION_HOURS)
+    timestamps = []
+    for s in raw:
+        try:
+            ts = datetime.fromisoformat(s)
+        except ValueError:
+            continue
+        if ts >= cutoff:
+            timestamps.append(ts)
+    return sorted(timestamps)
+
+
+def _save_post_log(timestamps: list) -> None:
+    with open(_POST_LOG_PATH, "w") as f:
+        json.dump([ts.isoformat() for ts in timestamps], f, indent=2)
+        f.write("\n")
+
+
+def _record_post() -> None:
+    log = _load_post_log()
+    log.append(datetime.now(timezone.utc))
+    _save_post_log(log)
+
+
+def _check_posting_cadence() -> None:
+    log = _load_post_log()
+    if not log:
+        return
+    now = datetime.now(timezone.utc)
+    today_count = sum(1 for ts in log if ts.date() == now.date())
+    if today_count >= MAX_POSTS_PER_DAY:
+        raise PostingCadenceGuardError(
+            f"Already posted {today_count} time(s) today (UTC) — MAX_POSTS_PER_DAY={MAX_POSTS_PER_DAY} reached."
+        )
+    gap_hours = (now - max(log)).total_seconds() / 3600
+    if gap_hours < MIN_POST_SPACING_HOURS:
+        raise PostingCadenceGuardError(
+            f"Last post was {gap_hours:.2f}h ago — under the {MIN_POST_SPACING_HOURS}h minimum spacing."
+        )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # STEP 1 — Research with Exa
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -430,7 +494,7 @@ def generate_post(topic: str, tone: str, research: str, style_index: int = 0) ->
         shorten_prompt = (
             f"This X post body is {len(post)} characters, over the {_BODY_CHAR_LIMIT}-character budget.\n\n"
             f"Shorten it to strictly under {_BODY_CHAR_LIMIT - 5} characters while keeping the same structure, voice, and impact.\n"
-            f"(The final post also gets hashtags + a URL appended — keep this body tight.)\n"
+            f"(This is the final post body — nothing else gets appended.)\n"
             f"Keep the hook, the story, the lesson. Cut filler words, not ideas.\n"
             f"Plain text only — no markdown, no hashtags.\n\n"
             f"Original post:\n{post}\n\n"
@@ -441,25 +505,14 @@ def generate_post(topic: str, tone: str, research: str, style_index: int = 0) ->
         post = _re.sub(r'_{1,2}(.+?)_{1,2}', r'\1', post)
         post = post.strip()
 
-    # Append 2 relevant hashtags + clickable portfolio URL
-    hashtags = _pick_hashtags(post, topic)
-    post = post + f"\n\n{hashtags}"
-    if PORTFOLIO_URL:
-        post = post + f"\n\n{PORTFOLIO_URL}"
-
-    # X counts any URL as 23 chars (t.co) regardless of raw length
-    x_len = len(post)
-    if PORTFOLIO_URL and PORTFOLIO_URL in post:
-        x_len = x_len - len(PORTFOLIO_URL) + _URL_TCOLEN
-
     print(f"\n  Generated post:\n  {'─'*50}")
     for line in post.split("\n"):
         print(f"  {line}")
     print(f"  {'─'*50}")
-    print(f"  Character count: {len(post)} raw / {x_len} X-chars (max 280)\n")
+    print(f"  Character count: {len(post)} / 280 max\n")
 
-    if x_len > 280:
-        raise ValueError(f"Post still too long ({x_len} X-chars) after shortening attempts.")
+    if len(post) > 280:
+        raise ValueError(f"Post still too long ({len(post)} chars) after shortening attempts.")
 
     return post
 
@@ -643,6 +696,9 @@ def main(preview: bool = False):
     print(f"{'='*60}\n")
 
     try:
+        if not preview:
+            _check_posting_cadence()
+
         research = research_topic(topic, NICHE)
         post     = generate_post(topic, tone, research, style_index)
 
@@ -663,11 +719,17 @@ def main(preview: bool = False):
             image_ref = build_infographic_image(research, topic, preview=False, style_index=style_index)
 
         post_id = schedule_to_buffer(post, image_ref)
+        _record_post()
 
         print(f"{'='*60}")
         print(f"  Done! Post queued in Buffer → will publish to X.com")
         print(f"  Buffer ID : {post_id}")
         print(f"{'='*60}\n")
+
+    except PostingCadenceGuardError as e:
+        print(f"\n  SKIPPED: {e}")
+        print(f"  Exiting with code 0 — workflow will NOT be marked as failed.\n")
+        raise SystemExit(0)
 
     except BufferRateLimitError as e:
         # Buffer rate limit during a daily run — skip gracefully rather than failing the workflow.
