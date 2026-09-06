@@ -48,7 +48,7 @@ evergreen "how it works" concept that can be explained in exactly 3 visual stage
 You ONLY cover Artificial Intelligence, Generative AI, AI tools, or Agentic AI.
 Write ALL text in ENGLISH ONLY. You return valid JSON only: no markdown, no prose."""
 
-_USER_TEMPLATE = """FRESH RESEARCH (last 48h, your inspiration — not the literal subject):
+_USER_TEMPLATE = """FRESH RESEARCH (last 48h, your inspiration, not the literal subject):
 Topic: "{topic}"
 
 SOURCES / CONTEXT:
@@ -64,7 +64,7 @@ THE X POST THIS INFOGRAPHIC IS PUBLISHED ALONGSIDE (must stay in sync with this)
 TASK
 Reframe this into ONE evergreen, teachable AI concept that fits a 3-stage infographic.
 The headline (headline_line1_*/headline_line2) and quote_main/quote_sub MUST reinforce the
-SAME hook and insight as the X post above — not invent a different angle. Someone should be
+SAME hook and insight as the X post above, not invent a different angle. Someone should be
 able to see the post and the image side by side and immediately recognize they're the same idea.
 Preferred 3-stage framing for this post: {style_framing}
 Use that framing to decide what the 3 stages represent (e.g. "Problem → Root Cause → Solution Mechanism"
@@ -75,7 +75,9 @@ Prefer the underlying mechanism over the news headline
 HARD RULES
 - Topic MUST be about AI, Generative AI, AI tools, or Agentic AI. Nothing else.
 - EXACTLY 3 stages and EXACTLY 3 explainers.
-- Every value concrete and specific — no filler like "AI is powerful".
+- Every value concrete and specific. No filler like "AI is powerful".
+- No em dashes or en dashes anywhere in any field. Use a period or comma instead.
+- Straight quotes only, never curly quotes.
 - stage.title <= 22 characters. stage.subtitle <= 30 characters, one line.
 - stage.icon MUST be one of: {icons}
 - arrow_note is a tiny 1-3 word label; the LAST stage's arrow_note MUST be "".

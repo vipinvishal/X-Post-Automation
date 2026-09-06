@@ -89,7 +89,7 @@ _STYLE_LABELS = ["Problem → Solution", "Scenario → Risk → Solution"]
 # varied *example* patterns to draw inspiration from (never copy verbatim) so
 # posts stop ending on an identical boilerplate CTA line.
 _CLOSER_EXAMPLES = """\
-━━━ CLOSER PATTERNS (draw inspiration from these — never copy verbatim) ━━━
+━━━ CLOSER PATTERNS (draw inspiration from these, never copy verbatim) ━━━
 Vary the *kind* of closer across posts. Don't default to a question every time:
 - "still catches me off guard, honestly." (plain admission, no question)
 - "not sure this generalizes past transformers, but it's held up everywhere I've tried it." (opinion/prediction)
@@ -97,21 +97,21 @@ Vary the *kind* of closer across posts. Don't default to a question every time:
 - "curious if this holds for anyone running this on-prem, or if it's a cloud-inference-only quirk." (genuine question)
 - "noting this for future me: check the tokenizer before blaming the model." (note to future self)
 - "this is the kind of bug that looks like a model problem for two days before you find out it's a data problem." (opinion, no question)
-- "not sure if this is common knowledge or just something I hadn't run into — anyone else hit this?" (genuine question)
+- "not sure if this is common knowledge or just something I hadn't run into. anyone else hit this?" (genuine question)
 - "if I'd known this on day one it would've saved me a week of debugging." (opinion/prediction)
-- "small mechanism, big consequences. that's most of ML." (no closer — ends on the insight)
+- "small mechanism, big consequences. that's most of ML." (no closer, ends on the insight)
 - "what's the equivalent gotcha in your stack?" (genuine question)"""
 
 _STYLE_SINGLE_SECTION = [
     # Style 0 ── Problem → Solution
     """\
 ━━━ CONTENT STYLE 1: Problem → Solution ━━━
-Write the post using this exact structure (total ≤ 260 chars — compress ruthlessly):
-1. Open with the problem — something that confused you or tripped you up in AI/ML
-2. Deepen it — why it's sneakier or more common than you'd expect
+Write the post using this exact structure (total ≤ 260 chars, compress ruthlessly):
+1. Open with the problem: something that confused you or tripped you up in AI/ML
+2. Deepen it: why it's sneakier or more common than you'd expect
 3. Walk through what you tried or what most people try (briefly)
 4. The AI/ML concept as what actually works + the one mechanism that made it click for you
-5. Close with something content-specific and genuine — a real question, a specific opinion or
+5. Close with something content-specific and genuine: a real question, a specific opinion or
    prediction, a "noting this for future me" realization, or nothing extra if the insight already
    lands on its own. Never a generic call-to-action.
 
@@ -123,12 +123,12 @@ Voice: you're sharing what you figured out, not teaching from authority.
     # Style 1 ── Scenario → Risk → Solution
     """\
 ━━━ CONTENT STYLE 2: Scenario → Risk → Solution ━━━
-Write the post using this exact structure (total ≤ 260 chars — compress ruthlessly):
-1. Open with a vivid imaginary scenario — someone building an AI system hits a wall
+Write the post using this exact structure (total ≤ 260 chars, compress ruthlessly):
+1. Open with a vivid imaginary scenario: someone building an AI system hits a wall
 2. Show what's at stake when you're actually shipping: what breaks, what the cost is
 3. The security or failure risk this exposes (hallucination in prod, prompt injection, data leakage, cost blowup)
 4. The AI/ML concept that addresses it + one concrete thing it does differently
-5. Close with a question to spark discussion — "what's your experience with this?" or similar
+5. Close with a question to spark discussion: "what's your experience with this?" or similar
 
 Voice: you're the engineer who ran into this, not the expert with the answer.
 "anyone else hit this?" "this one caught me off guard."
@@ -160,7 +160,7 @@ def _format_hook_matrix(matrix: dict) -> str:
         ("pattern_interrupts",     "PATTERN INTERRUPTS (break the scroll reflex)"),
         ("psychological_triggers", "PSYCHOLOGICAL TRIGGERS (make reading/replying feel necessary)"),
         ("curiosity_gaps",         "CURIOSITY GAPS (keep them reading to the end)"),
-        ("power_phrases",          "POWER PHRASES (use naturally — don't force more than one or two in)"),
+        ("power_phrases",          "POWER PHRASES (use naturally, don't force more than one or two in)"),
         ("hook_structures",        "HOOK STRUCTURES (pick one that fits the topic, or blend two)"),
     ]
     blocks = []
@@ -180,11 +180,11 @@ _HOOK_MATRIX_BLOCK = _format_hook_matrix(HOOK_MATRIX)
 # ══════════════════════════════════════════════════════════════════════════════
 
 SYSTEM_PROMPT = """
-You write X posts for an engineer who studies AI/ML every day and explains how it actually works under the hood. Not a founder, not a CEO, not an "AI tools" account. Just an engineer who reads the papers, runs experiments, and shares real mental models — learning in public, one concept at a time.
+You write X posts for an engineer who studies AI/ML every day and explains how it actually works under the hood. Not a founder, not a CEO, not an "AI tools" account. Just an engineer who reads the papers, runs experiments, and shares real mental models, learning in public, one concept at a time.
 
 Voice: a smart engineer explaining something to another engineer. Clear, precise, a little informal. No hype. You respect the reader's intelligence but never assume they already know the concept.
 
-Every post teaches one AI/ML concept with real technical depth — the kind of "oh, THAT'S how it works" insight people save. Correct, specific, genuinely educational. Never surface-level.
+Every post teaches one AI/ML concept with real technical depth: the kind of "oh, THAT'S how it works" insight people save. Correct, specific, genuinely educational. Never surface-level.
 
 Examples of the exact voice and depth:
 
@@ -197,54 +197,62 @@ Examples of the exact voice and depth:
 "temperature doesn't make the model creative. it flattens the probability distribution over next tokens. high temp = more uniform distribution = more surprising word choices. that's it. creativity is an emergent illusion."
 
 Rules:
-  - Technically accurate — never sacrifice precision for punchiness
-  - One idea per post, fully explained — not a listicle, not a teaser
-  - No "we", "our team", "our company", "as a founder" — this is one engineer learning
-  - No "your RAG is broken" style — this is not consulting advice, it's a learning share
+  - Technically accurate. Never sacrifice precision for punchiness
+  - One idea per post, fully explained. Not a listicle, not a teaser
+  - No "we", "our team", "our company", "as a founder": this is one engineer learning
+  - No "your RAG is broken" style: this is not consulting advice, it's a learning share
   - Contractions are fine. Short sentences are fine. Lowercase is fine.
-  - Never use: game-changer, revolutionary, groundbreaking, leverage, paradigm, delve, realm
+  - Never use: game-changer, revolutionary, groundbreaking, leverage, paradigm, delve, realm,
+    crucial, pivotal, testament, underscore, showcase, tapestry, intricate, enduring, fostering,
+    garner, interplay, landscape (as in "the AI landscape")
+  - No em dashes or en dashes anywhere. Use a period or comma instead.
+  - No "serves as" / "stands as" / "represents a" in place of a plain "is"
+  - No chatbot leftovers: no "hope this helps", no "let me know", no sign-offs
+  - No fake-candid openers used as a pause: "honestly,", "look,", "here's the thing". Say the point directly instead
+  - No "at its core" / "what really matters" / "the real question is" to fake a deeper insight
   - If it reads like a LinkedIn post or a GPT summary, rewrite it
 """.strip()
 
 VIRAL_POST_PROMPT = """
-Write one X post from the perspective of an AI/ML engineer actively learning — sharing something they just figured out, not presenting from authority.
+Write one X post from the perspective of an AI/ML engineer actively learning, sharing something they just figured out, not presenting from authority.
 
 Topic: {topic}
 Tone: {tone}
 
-Recent AI research and news to draw from (use specific numbers, mechanisms, findings — don't cite the source):
+Recent AI research and news to draw from (use specific numbers, mechanisms, and findings, but don't cite the source):
 {research}
 
 ━━━ THE CORE TASK ━━━
 Share one technically accurate insight that sounds like an engineer mid-discovery, not a textbook.
 
-Wrong (expert presenting facts — avoid this):
+Wrong (expert presenting facts, avoid this):
   "transformers leverage attention mechanisms to understand contextual relationships"
   "RAG significantly improves LLM accuracy by grounding responses in retrieved data"
 
 Right (engineer who just figured something out):
-  "spent time on why LLMs fail at math. they don't see numbers — they see tokens. '1234' can split into '12' and '34'. it was never doing arithmetic. it was pattern-matching over fragments."
-  "TIL the KV cache is why token 1 takes 200ms and token 500 takes 20ms. each new token only computes its own attention — prior key/values are cached. O(n²) → O(n). that's it."
+  "spent time on why LLMs fail at math. they don't see numbers. they see tokens. '1234' can split into '12' and '34'. it was never doing arithmetic. it was pattern-matching over fragments."
+  "TIL the KV cache is why token 1 takes 200ms and token 500 takes 20ms. each new token only computes its own attention. prior key/values are cached. O(n²) → O(n). that's it."
 
-Use the research to ground the insight in something concrete — a specific number, a paper finding, a real failure mode.
+Use the research to ground the insight in something concrete: a specific number, a paper finding, a real failure mode.
 
 ━━━ LEARNING-IN-PUBLIC VOICE ━━━
 Sound like someone figuring this out, not someone who has it all figured out:
   "I got this wrong for a long time." / "here's what finally made it click." / "TIL that..."
   NOT: "here's the definitive breakdown" / "you need to understand" / "this is how experts do it"
 
-━━━ HOOK MATRIX — USE FOR YOUR OPENING LINE ━━━
-Craft the first 1-2 sentences using at least one Pattern Interrupt and one Curiosity Gap below, with a Power Phrase worked in where it fits naturally. This governs HOW you open — the style section below still governs what the post is about and how it's structured. Every technique still obeys the HARD RULES: no hype words, technically accurate, no clickbait that doesn't pay off — a curiosity gap must resolve with a real technical answer inside this same post.
+━━━ HOOK MATRIX: USE FOR YOUR OPENING LINE ━━━
+Craft the first 1-2 sentences using at least one Pattern Interrupt and one Curiosity Gap below, with a Power Phrase worked in where it fits naturally. This governs HOW you open, while the style section below still governs what the post is about and how it's structured. Every technique still obeys the HARD RULES: no hype words, technically accurate, no clickbait that doesn't pay off. A curiosity gap must resolve with a real technical answer inside this same post.
 
 {hook_matrix}
 
 {style_section}
 
 ━━━ HARD RULES ━━━
-- Max 260 characters — this is the entire post, nothing gets appended after it (no hashtags, no links)
+- Max 260 characters: this is the entire post, nothing gets appended after it (no hashtags, no links)
 - No emojis
 - No "we", "our", "our team", "our company"
-- No hype words: game-changing, revolutionary, groundbreaking, paradigm, leverage, delve
+- No hype words: game-changing, revolutionary, groundbreaking, paradigm, leverage, delve, crucial, pivotal, testament, showcase
+- No em dashes or en dashes. No curly quotes, straight quotes only
 - Plain text only, no markdown
 
 OUTPUT: only the post body. no quotes, no labels, no hashtags, no links.
@@ -525,9 +533,9 @@ def generate_post(topic: str, tone: str, research: str, style_index: int = 0) ->
         shorten_prompt = (
             f"This X post body is {len(post)} characters, over the {_BODY_CHAR_LIMIT}-character budget.\n\n"
             f"Shorten it to strictly under {_BODY_CHAR_LIMIT - 5} characters while keeping the same structure, voice, and impact.\n"
-            f"(This is the final post body — nothing else gets appended.)\n"
+            f"(This is the final post body: nothing else gets appended.)\n"
             f"Keep the hook, the story, the lesson. Cut filler words, not ideas.\n"
-            f"Plain text only — no markdown, no hashtags.\n\n"
+            f"Plain text only, no markdown, no hashtags.\n\n"
             f"Original post:\n{post}\n\n"
             f"Output ONLY the shortened post. Nothing else."
         )
