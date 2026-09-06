@@ -56,8 +56,16 @@ SOURCES / CONTEXT:
 
 ---
 
+THE X POST THIS INFOGRAPHIC IS PUBLISHED ALONGSIDE (must stay in sync with this):
+{post_text}
+
+---
+
 TASK
 Reframe this into ONE evergreen, teachable AI concept that fits a 3-stage infographic.
+The headline (headline_line1_*/headline_line2) and quote_main/quote_sub MUST reinforce the
+SAME hook and insight as the X post above — not invent a different angle. Someone should be
+able to see the post and the image side by side and immediately recognize they're the same idea.
 Preferred 3-stage framing for this post: {style_framing}
 Use that framing to decide what the 3 stages represent (e.g. "Problem → Root Cause → Solution Mechanism"
 means stage 1 = the problem state, stage 2 = why it happens, stage 3 = how the concept fixes it).
@@ -154,15 +162,19 @@ def _coerce(data: dict) -> dict:
 
 
 def generate_infographic_content(research: str, topic: str, generate_text_fn,
-                                  style_framing: str = "Problem → Root Cause → Solution Mechanism") -> dict:
+                                  style_framing: str = "Problem → Root Cause → Solution Mechanism",
+                                  post_text: str = "") -> dict:
     """Build validated infographic content JSON, reusing the text-gen chain.
 
     generate_text_fn(prompt, system) -> str   (the Gemini/Euron chain from main)
     style_framing: hint that aligns the 3 stages with the current post style.
+    post_text: the X post this infographic is published alongside — grounds
+    the headline/quote in the same hook instead of inventing a different one.
     """
     prompt = _USER_TEMPLATE.format(
         topic=topic,
         research=(research or "").strip()[:5500] or topic,
+        post_text=(post_text or "").strip() or "(not provided)",
         icons=", ".join(ICON_NAMES),
         handle=INFOGRAPHIC_HANDLE,
         style_framing=style_framing,

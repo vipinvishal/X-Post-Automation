@@ -89,5 +89,52 @@
     "one surprising fact — a single thing that is technically true and non-obvious. just the fact and what it means.",
     "step-by-step breakdown — how something works in 3-4 concrete steps. each step is one short line.",
     "concept comparison — two things that seem similar but work differently. nail the key difference in 2-3 lines."
-  ]
+  ],
+
+  "hook_matrix": {
+    "pattern_interrupts": [
+      "Wrong Assumption Snap — state the common belief as flat fact, then deny it in the very next clause. e.g. 'everyone thinks fine-tuning teaches new facts. it doesn't.'",
+      "Mid-Thought Drop — open like you're already mid-explanation, no throat-clearing. e.g. 'so it turns out the cache isn't optional — it's the entire reason chat feels instant.'",
+      "Cold Number Open — lead with one specific, unexpected number before any context. e.g. '128k tokens of context and it still forgets line 40.'",
+      "Flat Confession — one short, unhedged admission of being wrong, no self-deprecating padding. e.g. 'I didn't get attention for six months. then this clicked.'",
+      "Reversal Statement — say the exact opposite of what the reader expects the sentence to end with. e.g. 'temperature has nothing to do with creativity.'",
+      "Direct Address — speak straight at the person mid-problem, no wind-up. e.g. 'if your RAG keeps returning garbage, it's probably not the model.'"
+    ],
+    "psychological_triggers": [
+      "Competence Check — implies the reader might be doing it wrong right now, triggering an instant self-audit. Must stay factual, never manipulative-empty.",
+      "Insider Detail — surfaces something the paper or docs gloss over. 'the paper doesn't say this part out loud, but...'",
+      "Myth vs Mechanism (cognitive dissonance) — state the common belief, then contradict it with the real mechanism, forcing a mental-model update.",
+      "Shared Struggle — names a specific, relatable debugging pain so readers feel 'seen' and want to reply with their own version. 'if you've ever debugged this at 2am, you know.'",
+      "Vulnerability-as-Authority — admit confusion before delivering the insight; builds trust because it isn't lecturing.",
+      "Unresolved Tension — pose two things that seem contradictory and let the post reconcile them; the brain can't let an open contradiction sit."
+    ],
+    "curiosity_gaps": [
+      "The Open Loop — state the surprising result first, defer the reason to the very next sentence. 'the bug wasn't in my code. it was in how I was counting tokens.'",
+      "The Withheld Mechanism — hint that one specific detail explains everything, without naming it yet. 'there's one line in the attention formula that explains this entire failure mode.'",
+      "Setup → Payoff Gap — describe the confusing symptom first, resolve it with the mechanism only in the second half of the post.",
+      "The Partial Reveal — give most of the picture, hold the exact number or detail back for the next sentence.",
+      "The 'One Thing' Frame — 'there's exactly one design choice that makes this possible' — narrows attention to a single answer worth reading for.",
+      "Hard rule for every gap: it MUST resolve with a real technical answer inside the same post. No gap is allowed to go unclosed — this is structuring a real insight for pull, not clickbait."
+    ],
+    "power_phrases": [
+      "turns out...",
+      "here's the part nobody explains clearly",
+      "the actual mechanism is...",
+      "I got this wrong for a while",
+      "that's the whole trick",
+      "nobody tells you this, but...",
+      "the model isn't doing what you think it's doing",
+      "here's what actually happens",
+      "it was never doing X. it was doing Y.",
+      "the reason is dumber than you'd expect"
+    ],
+    "hook_structures": [
+      "Myth → Mechanism: state the widespread wrong belief, then the real mechanism that corrects it. (the natural engine for Style 1 — Problem → Solution)",
+      "Scenario → Breakdown: open on a concrete failure a builder hits, then explain the mechanism behind it. (the natural engine for Style 2 — Scenario → Risk → Solution)",
+      "Confession → Discovery: admit not understanding something, then narrate the exact detail that made it click.",
+      "Number → Explanation: open on one specific, surprising number or stat, then unpack why it's true.",
+      "Direct Correction: 'X doesn't do Y. it does Z.' — snaps a wrong mental model straight in one line.",
+      "Question Nobody Asks: pose a question most people never think to ask about a familiar tool, then answer it technically."
+    ]
+  }
 }

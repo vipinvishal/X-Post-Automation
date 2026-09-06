@@ -62,6 +62,7 @@ PERSONA       = _config["persona"]
 TOPICS        = _config["topics"]
 SERIES_TOPICS = _config.get("series_topics", {})
 TONES         = _config["tones"]
+HOOK_MATRIX   = _config.get("hook_matrix", {})
 
 # Day-of-week series routing (0=Mon, 2=Wed, 4=Fri)
 _SERIES_DAY_MAP = {
@@ -150,6 +151,30 @@ def _pick_style_index() -> int:
     return (now.timetuple().tm_yday * 3 + slot) % 2
 
 
+def _format_hook_matrix(matrix: dict) -> str:
+    """Render scripts/topics.json's hook_matrix into a prompt block. Edit the
+    JSON to tune the techniques — this just formats whatever is there."""
+    if not matrix:
+        return ""
+    sections = [
+        ("pattern_interrupts",     "PATTERN INTERRUPTS (break the scroll reflex)"),
+        ("psychological_triggers", "PSYCHOLOGICAL TRIGGERS (make reading/replying feel necessary)"),
+        ("curiosity_gaps",         "CURIOSITY GAPS (keep them reading to the end)"),
+        ("power_phrases",          "POWER PHRASES (use naturally — don't force more than one or two in)"),
+        ("hook_structures",        "HOOK STRUCTURES (pick one that fits the topic, or blend two)"),
+    ]
+    blocks = []
+    for key, label in sections:
+        items = matrix.get(key) or []
+        if not items:
+            continue
+        blocks.append(label + ":\n" + "\n".join(f"- {item}" for item in items))
+    return "\n\n".join(blocks)
+
+
+_HOOK_MATRIX_BLOCK = _format_hook_matrix(HOOK_MATRIX)
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # PROMPTS
 # ══════════════════════════════════════════════════════════════════════════════
@@ -207,6 +232,11 @@ Use the research to ground the insight in something concrete — a specific numb
 Sound like someone figuring this out, not someone who has it all figured out:
   "I got this wrong for a long time." / "here's what finally made it click." / "TIL that..."
   NOT: "here's the definitive breakdown" / "you need to understand" / "this is how experts do it"
+
+━━━ HOOK MATRIX — USE FOR YOUR OPENING LINE ━━━
+Craft the first 1-2 sentences using at least one Pattern Interrupt and one Curiosity Gap below, with a Power Phrase worked in where it fits naturally. This governs HOW you open — the style section below still governs what the post is about and how it's structured. Every technique still obeys the HARD RULES: no hype words, technically accurate, no clickbait that doesn't pay off — a curiosity gap must resolve with a real technical answer inside this same post.
+
+{hook_matrix}
 
 {style_section}
 
@@ -469,6 +499,7 @@ def generate_post(topic: str, tone: str, research: str, style_index: int = 0) ->
         topic=topic,
         tone=tone,
         research=research[:2000],
+        hook_matrix=_HOOK_MATRIX_BLOCK,
         style_section=_STYLE_SINGLE_SECTION[style_index],
     )
 
@@ -644,8 +675,11 @@ def schedule_to_buffer(post_text: str, image_url: str = None) -> str:
 # STEP 3.5 — Infographic image
 # ══════════════════════════════════════════════════════════════════════════════
 
-def build_infographic_image(research: str, topic: str, preview: bool, style_index: int = 0):
+def build_infographic_image(research: str, topic: str, preview: bool, style_index: int = 0, post_text: str = ""):
     """Render the infographic and (unless preview) host it for Buffer.
+
+    post_text: the already-generated post body, so the infographic's headline
+    and quote stay in sync with the same hook instead of inventing a new one.
 
     Returns a public image URL (real run), a local PNG path (preview), or None
     on any failure — so a single rendering hiccup never kills the daily post.
@@ -653,7 +687,7 @@ def build_infographic_image(research: str, topic: str, preview: bool, style_inde
     try:
         print("\n[ Step 3.5 ] Building infographic image...")
         framing  = _STYLE_INFOGRAPHIC_FRAMING[style_index]
-        content  = infographic.generate_infographic_content(research, topic, generate_text, framing)
+        content  = infographic.generate_infographic_content(research, topic, generate_text, framing, post_text=post_text)
         out_dir  = os.path.join(_script_dir, "..", "output")
         os.makedirs(out_dir, exist_ok=True)
         png_path = os.path.abspath(os.path.join(out_dir, "infographic.png"))
@@ -705,7 +739,7 @@ def main(preview: bool = False):
         if preview:
             image_ref = None
             if INCLUDE_INFOGRAPHIC:
-                image_ref = build_infographic_image(research, topic, preview=True, style_index=style_index)
+                image_ref = build_infographic_image(research, topic, preview=True, style_index=style_index, post_text=post)
             if image_ref:
                 print(f"  Infographic saved at: {image_ref}")
             print(f"{'='*60}")
@@ -716,7 +750,7 @@ def main(preview: bool = False):
 
         image_ref = None
         if INCLUDE_INFOGRAPHIC:
-            image_ref = build_infographic_image(research, topic, preview=False, style_index=style_index)
+            image_ref = build_infographic_image(research, topic, preview=False, style_index=style_index, post_text=post)
 
         post_id = schedule_to_buffer(post, image_ref)
         _record_post()
